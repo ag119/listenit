@@ -1,4 +1,4 @@
-const CACHE_NAME = "listenit-v5";
+const CACHE_NAME = "listenit-v6";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -11,6 +11,7 @@ const APP_SHELL = [
   "/offline.html",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/icons/og-cover.jpg",
   "/thumbnails/corporatesucks.jpg",
   "/thumbnails/deluxesalon.jpg",
   "/thumbnails/hornokplease.jpg",
