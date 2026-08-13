@@ -10,15 +10,15 @@
  * works identically either way, see js/firebase-app.mjs.
  */
 window.LISTENIT_FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID",
+  apiKey: "AIzaSyBRuxTfmj-Etslzfv-3mU7uWSjxn7yBbbs",
+  authDomain: "listenit-ae6a9.firebaseapp.com",
+  projectId: "listenit-ae6a9",
+  storageBucket: "listenit-ae6a9.firebasestorage.app",
+  messagingSenderId: "665006992120",
+  appId: "1:665006992120:web:60b8038d5a7bc044b1690d",
+  measurementId: "G-Y62NV4X4G5",
   // Realtime Database, used only for the live-user-count feature.
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com"
+  databaseURL: "https://listenit-ae6a9-default-rtdb.firebaseio.com"
 };
 
 /**
