@@ -1,0 +1,235 @@
+# ListenIt
+
+A one-stop directory PWA for quirky, always-on internet radio stations (corporate hold music, a street-corner saloon, a bus driver's playlist, and more). Apps open right inside the site in an embedded viewer. No build step — plain HTML/CSS/JS, ready to host on GitHub Pages.
+
+## Local preview
+
+No build tools needed. Any static file server works, e.g.:
+
+```bash
+npx serve .
+```
+
+or
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open the printed local URL. (Opening `index.html` directly via `file://` will mostly work too, but the service worker won't register — always test through `http://localhost`.)
+
+## Adding / editing listed apps
+
+Edit [`js/apps-data.js`](js/apps-data.js) — it's a plain array, one object per app:
+
+```js
+{
+  id: "unique-slug",
+  name: "Display Name",
+  url: "https://example.com",
+  domain: "example.com",
+  tagline: "One short line about it.",
+  category: "Ambient Radio",       // groups apps into filter chips
+  thumbnail: "thumbnails/example.jpg",  // fallback image, see below
+  embeddable: true,                // set false if the site blocks iframes
+                                    // (sends X-Frame-Options / CSP frame-ancestors) —
+                                    // ListenIt will send people to a new tab instead
+  addedAt: "2026-08-13"
+}
+```
+
+### Thumbnails
+
+Cards show a **live screenshot** of the app, fetched at render time from [thum.io](https://thum.io) (`js/app.js` → `liveThumbUrl()` / `loadLiveThumb()`) — free, no API key, no backend. It always reflects whatever the app currently looks like.
+
+The `thumbnail` field is the fallback: it's what shows first (so cards never look blank), and what the card falls back to if the live screenshot fails. Down apps (per `status.json`) skip the live fetch entirely and just use this fallback — a screenshot of an error page isn't a useful thumbnail. Drop a fallback image (roughly 800×500, JPG or PNG) into `thumbnails/` for every app you add.
+
+thum.io is a free public service with no uptime guarantee. Worth knowing: when it's rate-limited, it doesn't send an HTTP error — it sends a *valid* ~1KB image saying "Image not authorized, please sign up for a paid account," which a plain `<img onerror>` can't catch (the request "succeeds"). So `loadLiveThumb()` fetches the image as a blob first and checks its size (`MIN_LIVE_THUMB_BYTES`, currently 8KB — every real screenshot observed has been well over that, the rate-limit placeholder is ~1KB) before using it, falling back to the local image otherwise. Either way — outage, rate-limit, or anything else — cards degrade gracefully to the local fallback, nothing breaks.
+
+**How to tell if a site allows embedding:** run
+```bash
+curl -sI https://example.com | grep -i "x-frame-options\|content-security-policy"
+```
+If you see `X-Frame-Options: DENY` or `SAMEORIGIN`, or a CSP with `frame-ancestors`, set `embeddable: false`.
+
+## Submissions via WhatsApp
+
+The "Submit your app" form doesn't upload anywhere — it composes a WhatsApp message (name, URL, description) and opens `wa.me/918853487447` with it prefilled. No thumbnail needed from the submitter (it's captured live from their URL); when you add their entry to `js/apps-data.js`, grab a fallback image yourself, e.g.:
+
+```bash
+curl -sL "https://image.thum.io/get/width/800/crop/500/noanimate/https://their-app-url.example.com" -o thumbnails/their-app-id.jpg
+```
+
+To change the WhatsApp number, edit `WHATSAPP_NUMBER` near the top of [`js/app.js`](js/app.js) (country code + number, no `+` or spaces).
+
+## Automatic down-app handling
+
+Some listed sites go down (a Vercel deployment gets disabled, DNS lapses, etc.) — `hornokplease.xyz` was returning HTTP 402 "deployment disabled" at the time this was built. The browser can't reliably detect that on its own: most of these sites don't send CORS headers, so a client-side `fetch()` can't tell "reachable but broken" from "actually fine" — it can only see network-level failures.
+
+So a GitHub Actions workflow ([`.github/workflows/healthcheck.yml`](.github/workflows/healthcheck.yml)) curls every app server-side every 30 minutes (`scripts/healthcheck.mjs`) and commits the result to [`status.json`](status.json). This covers both the static list in `js/apps-data.js` and anything added via Firestore (see "Adding an app without redeploying") — the latter needs one optional extra step, see "Covering Firebase-added apps in the health check" below. The site fetches `status.json` at load and:
+
+- Skips down apps when picking for **Surprise me** (and when the viewer's "Try another radio" button is used) — it won't land on a dead one anymore.
+- Shows a red **Down** badge on the app's card (still clickable, in case the check is stale).
+- If you open a known-down app directly, the viewer skips the spinner and immediately offers **Try another radio** / **Open it anyway**.
+- As a safety net for outages the 30-minute check hasn't caught yet, an app that *looks* up but hangs while loading in the iframe for ~4.5s also gets a **Try another radio** button.
+
+Run it manually any time:
+
+```bash
+node scripts/healthcheck.mjs
+```
+
+For the workflow's auto-commit step to work on GitHub, enable write access once: **Settings → Actions → General → Workflow permissions → Read and write permissions**. You can also trigger it on demand from the **Actions** tab (`Health check listed apps` → **Run workflow**).
+
+## Firebase (analytics, trending, reactions, live users, remote app list)
+
+Five features run on Firebase, all client-only for now (no custom backend — see "Is this safe?" below):
+
+- **App listings** — apps can be added straight to Firestore and show up on next page load, no redeploy. See "Adding an app without redeploying" below.
+- **Analytics** — page views + custom events (which app got opened, Surprise Me clicks, submissions, installs, favorites, shares, reactions, category filters, searches). See every `LI.trackEvent(...)` call in `js/app.js`.
+- **Trending** — a `plays` counter per app in Firestore, bumped every time someone opens it. The grid sorts by this (after the down/up sort) and cards show a `🔥 N` count once `N > 0`.
+- **Reactions** — 🔥❤️😢 counters per app in Firestore, shown as a floating bar in the viewer. Each browser can react once per app per emoji (tracked in `localStorage`, not bulletproof, fine for a hobby site).
+- **Live user count** — "N people listening right now" in the hero, via Realtime Database's standard presence pattern (anonymous auth + `onDisconnect()`).
+
+**The site works identically with none of this set up.** `js/firebase-config.js` ships with placeholder values and a full no-op stub (`window.ListenIt`) — every call site in `app.js` calls it unconditionally, so until you configure a real project (or if Firebase ever fails to load), those calls just do nothing and the site runs entirely off `js/apps-data.js` as before.
+
+### Is this safe?
+
+Yes, with one thing to get right. The config in `js/firebase-config.js` is **not a secret** — Firebase's client config is meant to be public, it's in every Firebase web app's page source. The actual security boundary is the **rules** (`firestore.rules`, `database.rules.json`), enforced server-side:
+
+- The `apps` collection (what gets listed and loaded into the iframe viewer) is **read-only from the client** — `allow write: if false`, full stop. This matters more than the increment-only counters below: if visitors could write here, anyone could inject an arbitrary URL into your directory and have it load inside your site's viewer. You add entries with your own admin credentials (Console or `scripts/add-app.mjs`), which bypass rules entirely — that's expected, rules only govern the client SDK.
+- `appStats` and `reactions` are increment-only: a client can bump `plays` by exactly 1, or the sum of the reaction counters by exactly 1, and touch nothing else — no arbitrary values, no decrementing. See the rules files for the exact logic.
+- Presence writes are locked to `presence/{your-own-anonymous-uid}`, set to `true` only — you can't write another user's key or arbitrary data.
+- The one genuine secret in this setup is `serviceAccountKey.json` (used only by the `scripts/*.mjs` admin scripts, run locally/by you, never shipped to the site). It's in `.gitignore` — never commit it.
+
+### Setup steps
+
+1. **Create a project** at [console.firebase.google.com](https://console.firebase.google.com) → Add project. Enable Google Analytics when prompted (or skip if you don't want the analytics feature).
+2. **Add a Web App**: Project settings (⚙️) → General → Your apps → `</>` (Web). Copy the `firebaseConfig` object it gives you into `js/firebase-config.js`, replacing the `YOUR_...` placeholders.
+3. **Enable Firestore**: Build → Firestore Database → Create database → production mode, any region.
+4. **Enable Realtime Database**: Build → Realtime Database → Create database → any region, locked mode. Copy its URL into `databaseURL` in `js/firebase-config.js` (Project settings won't show this one — grab it from the Realtime Database page itself, looks like `https://<project-id>-default-rtdb.<region>.firebasedatabase.app`).
+5. **Enable Anonymous auth** (needed for the live user count): Build → Authentication → Get started → Sign-in method → Anonymous → Enable.
+6. **Deploy the security rules**:
+   ```bash
+   npm install -g firebase-tools   # once
+   firebase login
+   firebase use --add              # pick your project
+   firebase deploy --only firestore:rules,database
+   ```
+7. **Seed the per-app documents** (rules deliberately don't let the client create these, only increment them — see `firestore.rules`):
+   - Firebase Console → Project settings → Service accounts → **Generate new private key** → save as `serviceAccountKey.json` at the repo root (already gitignored).
+   ```bash
+   npm install
+   npm run seed-firebase
+   ```
+   Re-run this any time you add a new app to `js/apps-data.js`.
+8. Reload the site — analytics/trending/reactions/live-users should now be live. Check the browser console for `[ListenIt]` warnings if something's off.
+
+### Adding an app without redeploying
+
+Once Firebase is set up (above), you have two ways to add a listing — pick whichever's easier, both do the same thing:
+
+**A. Firebase Console** (no local setup needed):
+1. Firestore Database → Start collection (or open the existing one) → collection ID `apps`.
+2. Document ID: your app's slug, e.g. `night-auto-radio` (this becomes its `id`).
+3. Add fields — same shape as `js/apps-data.js`: `name`, `url`, `domain`, `tagline`, `category` (string, required); `embeddable` (boolean, default `true` if omitted); `thumbnail` (string, **optional** — leave it out and the site uses the generic placeholder + live thum.io screenshot, same as everything else).
+4. Save. Reload the site — it's there. To also seed its `appStats`/`reactions` docs (so trending/reactions work immediately instead of on first read), run `npm run seed-firebase` afterwards.
+
+**B. CLI script** (does all of the above, including seeding, in one step):
+```bash
+npm install   # once
+node scripts/add-app.mjs '{
+  "id": "night-auto-radio",
+  "name": "Night Auto Radio",
+  "url": "https://example.com",
+  "domain": "example.com",
+  "tagline": "One short line about it.",
+  "category": "Desi Nostalgia"
+}'
+```
+
+Either way, `firestore.rules` keeps the `apps` collection **read-only from the client** — only you, using `serviceAccountKey.json`-backed admin access (Console or the script), can add or change what's listed. A Firestore doc's `id` matching one already in `js/apps-data.js` overrides that entry (name/tagline/category/etc.) without touching code, in case you'd rather edit an existing listing this way too.
+
+### Covering Firebase-added apps in the health check
+
+`scripts/healthcheck.mjs` (see "Automatic down-app handling" above) always checks the static `js/apps-data.js` list. To have it also check apps added via Firestore, it needs the same admin credentials as the scripts above — locally it already picks up `serviceAccountKey.json` automatically, but GitHub Actions doesn't have that file (it's gitignored on purpose, it's a real secret), so it needs one extra step:
+
+1. Open `serviceAccountKey.json` and copy its entire contents.
+2. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**. Name it `FIREBASE_SERVICE_ACCOUNT`, paste the JSON as the value.
+3. That's it — `.github/workflows/healthcheck.yml` already passes it to the script when present.
+
+This is optional: without the secret, the scheduled health check simply keeps checking the static list only, exactly as before — nothing breaks either way. You can tell which mode a run used from its logs (Actions tab → the run → "Run health check" step): it prints either `Loaded N app(s) from Firestore.` or `No Firebase credentials found ... checking the static list only.`
+
+## Deploying to GitHub Pages
+
+1. Create a new GitHub repo (e.g. `listenit`) and push this folder's contents to its default branch:
+
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial ListenIt site"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+   git push -u origin main
+   ```
+
+2. On GitHub: **Settings → Pages → Build and deployment → Source** → set to **Deploy from a branch**, branch `main`, folder `/ (root)`. Save.
+
+3. GitHub will publish at `https://YOUR_USERNAME.github.io/YOUR_REPO/`. Confirm that works first.
+
+### Custom domain (listenit.in)
+
+A `CNAME` file containing `listenit.in` is already included at the repo root — GitHub Pages reads it automatically once Pages is enabled, and will show the domain under **Settings → Pages → Custom domain**.
+
+At your domain registrar, add these DNS records for `listenit.in`:
+
+| Type  | Host | Value |
+|-------|------|-------|
+| A     | @    | 185.199.108.153 |
+| A     | @    | 185.199.109.153 |
+| A     | @    | 185.199.110.153 |
+| A     | @    | 185.199.111.153 |
+| CNAME | www  | YOUR_USERNAME.github.io |
+
+Then in **Settings → Pages**, enter `listenit.in` as the custom domain and wait for DNS to propagate (can take up to a few hours). Once it's verified, tick **Enforce HTTPS**.
+
+> If you'd rather serve from `www.listenit.in`, swap the CNAME file's content to `www.listenit.in` and point the registrar's root domain (`@`) to redirect/forward to `www` instead — check what your registrar supports.
+
+### Re-deploying after changes
+
+Every `git push` to `main` re-publishes automatically — GitHub Pages has no separate build step for this project.
+
+## PWA installability
+
+Two prompts, both in `js/app.js` "Install prompt" section:
+
+- A small **"Install app"** button in the header — appears once the browser fires `beforeinstallprompt` (requires HTTPS — works once the custom domain + HTTPS are live; won't fire on `file://`).
+- A more prominent bottom **install banner** — same trigger on Android/desktop (with a real Install button wired to the same prompt), or on iOS Safari (no `beforeinstallprompt` API there, so it shows Share → Add to Home Screen instructions instead). Appears once, ~1.5s after load; dismissing it (×) remembers that choice in `localStorage` (`listenit-install-banner-dismissed`) and it won't show again — the small header button stays available regardless, as a persistent fallback.
+- Neither shows once the site is already running standalone (installed).
+- Icons live in `icons/`, regenerate them if you want a different look (`icons/icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, favicons).
+
+## Structure
+
+```
+index.html            Main page: hero, search, filters, grid, viewer, submit modal
+css/style.css          All styles (light + dark theme via CSS variables)
+js/apps-data.js        The list of apps — edit this to add/remove entries
+js/app.js               All behaviour: filtering, viewer, favorites, install prompt, etc.
+manifest.webmanifest    PWA manifest
+service-worker.js       Offline caching for the app shell (not the third-party apps)
+offline.html            Shown when offline and a page isn't cached
+404.html                 GitHub Pages 404 fallback
+thumbnails/              Card images
+icons/                   PWA / favicon icons
+CNAME                    Custom domain for GitHub Pages
+status.json              Up/down status per app, written by the health-check workflow
+scripts/healthcheck.mjs  Node script that curls every app and writes status.json
+.github/workflows/       Scheduled health-check workflow
+js/firebase-config.js    Firebase web config (public) + no-op stub, always loaded
+js/firebase-app.mjs      Real Firebase init — upgrades the stub if configured, no-ops otherwise
+firestore.rules          Firestore security rules (increment-only counters)
+database.rules.json      Realtime Database security rules (presence)
+firebase.json            Firebase CLI project config (which rules file is which)
+scripts/seed-firebase.mjs  Pre-creates the Firestore docs the rules require (needs serviceAccountKey.json, gitignored)
+scripts/add-app.mjs      Adds one app to Firestore (listing + stats docs) without redeploying
+```

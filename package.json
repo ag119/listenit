@@ -1,0 +1,13 @@
+{
+  "name": "listenit-tools",
+  "private": true,
+  "description": "Local admin scripts for the ListenIt static site. Not part of the deployed site — GitHub Pages serves the plain HTML/CSS/JS directly, no build step.",
+  "scripts": {
+    "healthcheck": "node scripts/healthcheck.mjs",
+    "seed-firebase": "node scripts/seed-firebase.mjs",
+    "add-app": "node scripts/add-app.mjs"
+  },
+  "devDependencies": {
+    "firebase-admin": "^12.3.1"
+  }
+}

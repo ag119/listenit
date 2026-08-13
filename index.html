@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ListenIt — one stop for India's weirdest ambient radios</title>
+<meta name="description" content="ListenIt is a directory of quirky, always-on internet radio stations — corporate hold music, salon street corners, bus driver playlists and more. Play them right here, or add your own." />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#7c3aed" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="ListenIt" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="color-scheme" content="dark light" />
+
+<meta property="og:title" content="ListenIt — a jukebox of the internet's weirdest ambient radios" />
+<meta property="og:description" content="Corporate hold music. A street-corner saloon. A bus driver's playlist. One place to find and play them all." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://listenit.in/" />
+<meta property="og:image" content="https://listenit.in/thumbnails/busdriver.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="brand" aria-label="ListenIt home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+          <rect x="6.4" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="10.8" y="2.5" width="2.6" height="19" rx="1.3" fill="currentColor"/>
+          <rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="19.6" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand-name"><span class="brand-name-listen">Listen</span><span class="brand-name-it">It</span></span>
+    </a>
+
+    <div class="header-actions">
+      <button id="installBtn" class="btn btn-ghost hidden" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Install app
+      </button>
+      <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Toggle dark / light theme" title="Toggle theme">
+        <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" class="hidden"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>One stop for the internet's weirdest ambient radios</h1>
+      <p class="hero-sub">Corporate hold music. A street-corner saloon. A bus driver's 3am playlist. Pick one and hit play — right here, no new tab needed.</p>
+
+      <div class="hero-controls">
+        <div class="search-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="searchInput" type="search" placeholder="Search apps… “bus”, “radio”, “salon”" aria-label="Search apps" />
+        </div>
+        <button id="surpriseBtn" class="btn btn-secondary" type="button">🎲 Surprise me</button>
+      </div>
+
+      <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
+
+      <p id="liveUsers" class="live-users hidden"><span class="live-dot" aria-hidden="true"></span><span id="liveUsersCount"></span></p>
+    </div>
+  </section>
+
+  <section class="grid-section">
+    <div id="grid" class="grid"></div>
+    <p id="emptyState" class="empty-state hidden">No apps match that search. Try a different word — or <button id="emptySubmitBtn" class="link-btn" type="button">submit your own</button>.</p>
+  </section>
+
+  <section class="submit-cta">
+    <div class="submit-cta-inner">
+      <div>
+        <h2>Made something weird and wonderful?</h2>
+        <p>Send me your app's name and link on WhatsApp and I'll add it here — thumbnails are generated automatically.</p>
+      </div>
+      <button id="submitBtn" class="btn btn-primary" type="button">+ Submit your app</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Built with ❤️ for the internet's odd corners. <button id="footerSubmitBtn" class="link-btn" type="button">Submit an app</button> · <a href="https://wa.me/918853487447" target="_blank" rel="noopener">WhatsApp</a></p>
+</footer>
+
+<!-- App viewer overlay -->
+<div id="viewer" class="viewer hidden" role="dialog" aria-modal="true" aria-label="App viewer">
+  <div class="viewer-bar">
+    <button id="viewerBack" class="btn btn-icon" type="button" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="viewer-title">
+      <img id="viewerFavicon" alt="" width="20" height="20" />
+      <span id="viewerName">App name</span>
+    </div>
+    <div class="viewer-actions">
+      <button id="viewerFav" class="btn btn-icon" type="button" aria-label="Add to favorites" title="Favorite">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.1 1.6 6.6 4.6 5.2c2.2-1 4.6-.2 5.9 1.6l1.5 2 1.5-2c1.3-1.8 3.7-2.6 5.9-1.6 3 1.4 3.6 4.9 1.9 7.7C18.7 16.65 12 21 12 21z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="viewerShare" class="btn btn-icon" type="button" aria-label="Share">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="2"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <a id="viewerOpenTab" class="btn btn-icon" target="_blank" rel="noopener" aria-label="Open in new tab" title="Open in new tab">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M10 14L20 4M19 13v6a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="viewer-body">
+    <div id="viewerLoading" class="viewer-loading">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Loading…</p>
+      <div id="viewerSlow" class="viewer-slow hidden">
+        <p>Taking a while. <a id="viewerSlowLink" href="#" target="_blank" rel="noopener">Open in a new tab instead →</a></p>
+        <button id="viewerSlowRetry" class="btn btn-secondary" type="button">🎲 Try another radio</button>
+      </div>
+    </div>
+    <div id="viewerBlocked" class="viewer-blocked hidden">
+      <p>This app doesn't allow embedding, so it opened in a new tab.</p>
+      <a id="viewerBlockedLink" href="#" target="_blank" rel="noopener" class="btn btn-primary">Open <span id="viewerBlockedName"></span></a>
+    </div>
+    <div id="viewerDown" class="viewer-blocked hidden">
+      <p>📡 <strong id="viewerDownName"></strong> looks like it's down right now.</p>
+      <div class="viewer-down-actions">
+        <button id="viewerDownRetry" class="btn btn-primary" type="button">🎲 Try another radio</button>
+        <a id="viewerDownLink" href="#" target="_blank" rel="noopener" class="btn btn-secondary">Open it anyway</a>
+      </div>
+    </div>
+    <iframe id="viewerFrame" title="App preview" allow="autoplay; encrypted-media" loading="eager"></iframe>
+    <div id="viewerReactions" class="viewer-reactions hidden" role="group" aria-label="React to this app">
+      <button type="button" class="reaction-btn" data-key="fire">🔥<span class="reaction-count" data-count="fire">0</span></button>
+      <button type="button" class="reaction-btn" data-key="heart">❤️<span class="reaction-count" data-count="heart">0</span></button>
+      <button type="button" class="reaction-btn" data-key="sad">😢<span class="reaction-count" data-count="sad">0</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit modal -->
+<div id="submitModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="submitTitle">
+  <div class="modal-backdrop" id="submitBackdrop"></div>
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h2 id="submitTitle">Submit your app</h2>
+      <button id="submitClose" class="btn btn-icon" type="button" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <p class="modal-sub">Fill this in, hit send — it opens WhatsApp with your details prefilled. Thumbnails are captured automatically from your URL, no image needed.</p>
+    <form id="submitForm" class="submit-form">
+      <label>
+        App name
+        <input type="text" id="fName" required maxlength="60" placeholder="e.g. Night Auto Radio" />
+      </label>
+      <label>
+        App URL
+        <input type="url" id="fUrl" required placeholder="https://yourapp.example.com" />
+      </label>
+      <label>
+        Short description
+        <textarea id="fDesc" required maxlength="160" rows="3" placeholder="One line about what it does"></textarea>
+      </label>
+      <label>
+        Your name / Instagram (optional)
+        <input type="text" id="fAuthor" maxlength="60" placeholder="So I can credit you" />
+      </label>
+      <p class="form-note">📷 Thumbnails are auto-captured from your app's URL. Only attach a screenshot in the chat if your app needs a login and won't screenshot well on its own.</p>
+      <button type="submit" class="btn btn-primary btn-block">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
+        Send on WhatsApp
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Install PWA banner -->
+<div id="installBanner" class="install-banner hidden" role="complementary" aria-label="Install ListenIt">
+  <img class="install-banner-icon" src="icons/icon-192.png" alt="" width="44" height="44" />
+  <div class="install-banner-text">
+    <strong>Install ListenIt</strong>
+    <span id="installBannerSub">Add it to your home screen for one-tap access, even offline.</span>
+  </div>
+  <button id="installBannerAction" class="btn btn-primary hidden" type="button">Install</button>
+  <button id="installBannerClose" class="install-banner-close" type="button" aria-label="Dismiss">×</button>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/apps-data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script type="module" src="js/firebase-app.mjs"></script>
+</body>
+</html>

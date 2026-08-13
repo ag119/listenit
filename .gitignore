@@ -1,0 +1,10 @@
+node_modules/
+
+# Firebase Admin SDK service account key — this one IS a secret, unlike
+# js/firebase-config.js. Never commit it. See scripts/seed-firebase.mjs.
+serviceAccountKey.json
+
+.DS_Store
+
+# Per-machine local settings, not shared project config (that's launch.json).
+.claude/settings.local.json

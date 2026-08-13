@@ -1,0 +1,50 @@
+name: Health check listed apps
+
+on:
+  schedule:
+    # Every 30 minutes. GitHub may delay this under load — treat as "roughly".
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: healthcheck
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run health check
+        id: healthcheck
+        # FIREBASE_SERVICE_ACCOUNT is optional — only needed to also check
+        # apps added via Firestore instead of js/apps-data.js (see README
+        # "Covering Firebase-added apps in the health check"). Without it,
+        # this just checks the static list, same as before.
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node scripts/healthcheck.mjs
+
+      - name: Commit status.json if it changed
+        run: |
+          if git diff --quiet -- status.json; then
+            echo "No change to status.json, skipping commit."
+            exit 0
+          fi
+          git config user.name "listenit-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add status.json
+          git commit -m "chore: update app status [skip ci]"
+          git push

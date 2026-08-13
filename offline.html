@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Offline — ListenIt</title>
+<meta name="theme-color" content="#7c3aed" />
+<style>
+  html,body{height:100%;margin:0;background:#0e0b16;color:#f4f2fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
+  h1{font-size:22px;margin:0 0 10px;}
+  p{color:#b4acc9;max-width:340px;line-height:1.5;margin:0 0 20px;}
+  button{background:linear-gradient(135deg,#7c3aed,#ec4899);border:none;color:#fff;font-weight:700;padding:12px 22px;border-radius:999px;font-size:14px;cursor:pointer;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>You're offline</h1>
+    <p>ListenIt needs a connection to stream these radios. Reconnect and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>
