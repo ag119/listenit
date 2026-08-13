@@ -19,6 +19,32 @@
     async getApps() { return []; }
   };
 
+  /* ---------------- Body scroll lock ----------------
+   * Plain `overflow: hidden` on <body> doesn't reliably stop the page from
+   * moving on iOS Safari — the underlying page can still shift while a
+   * full-screen overlay is open, which on notched iPhones showed up as a
+   * gap at the top with the grid/header peeking through above the viewer.
+   * The standard fix: pin body in place with a negative top offset instead
+   * of just hiding overflow, then restore the exact scroll position after.
+   */
+  let lockedScrollY = 0;
+  function lockBodyScroll() {
+    lockedScrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = -lockedScrollY + "px";
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.overflow = "hidden";
+  }
+  function unlockBodyScroll() {
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.overflow = "";
+    window.scrollTo(0, lockedScrollY);
+  }
+
   // The directory starts as the apps baked into js/apps-data.js (so the
   // page renders instantly with no network wait), then loadFirebaseApps()
   // merges in anything from Firestore once Firebase is ready — that's how
@@ -358,7 +384,7 @@
     viewerFav.classList.toggle("active", isFavorite(app.id));
 
     viewer.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
 
     if (pushState) {
       history.pushState({ listenitApp: app.id }, "", "?app=" + app.id);
@@ -416,7 +442,7 @@
 
   function closeViewer(pushState = true) {
     viewer.classList.add("hidden");
-    document.body.style.overflow = "";
+    unlockBodyScroll();
     viewerFrame.src = "about:blank";
     clearTimeout(slowTimer);
     document.getElementById("viewerReactions").classList.add("hidden");
@@ -538,13 +564,13 @@
   const submitModal = document.getElementById("submitModal");
   function openSubmitModal() {
     submitModal.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     document.getElementById("fName").focus();
     LI.trackEvent("submit_form_open");
   }
   function closeSubmitModal() {
     submitModal.classList.add("hidden");
-    document.body.style.overflow = "";
+    unlockBodyScroll();
   }
   document.getElementById("submitBtn").addEventListener("click", openSubmitModal);
   document.getElementById("footerSubmitBtn").addEventListener("click", openSubmitModal);
