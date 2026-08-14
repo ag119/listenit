@@ -1,41 +1,41 @@
 {
-  "generatedAt": "2026-08-14T01:05:14.495Z",
+  "generatedAt": "2026-08-14T03:34:06.453Z",
   "apps": {
     "corporatesucks": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T01:05:13.296Z"
+      "checkedAt": "2026-08-14T03:34:05.331Z"
     },
     "deluxesalon": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T01:05:13.352Z"
+      "checkedAt": "2026-08-14T03:34:05.386Z"
     },
     "hornokplease": {
       "up": false,
       "statusCode": 402,
       "error": null,
-      "checkedAt": "2026-08-14T01:05:13.354Z"
+      "checkedAt": "2026-08-14T03:34:05.389Z"
     },
     "busdriver": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T01:05:13.355Z"
+      "checkedAt": "2026-08-14T03:34:05.390Z"
     },
     "rickshaw-wala": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T01:05:13.356Z"
+      "checkedAt": "2026-08-14T03:34:05.391Z"
     },
     "mehfil": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T01:05:13.357Z"
+      "checkedAt": "2026-08-14T03:34:05.392Z"
     }
   }
 }
