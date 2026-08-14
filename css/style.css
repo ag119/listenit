@@ -235,9 +235,25 @@ button { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px 0 16px;
+  gap: 4px;
+  padding: 4px 10px 4px 4px;
+}
+.cloud-sky-toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 8px 8px 12px;
+  color: inherit;
+  text-align: left;
 }
 .cloud-sky-label { font-size: 12px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+.cloud-sky-chevron { color: var(--text-faint); transition: transform .18s ease; flex-shrink: 0; }
+.cloud-sky-section.collapsed .cloud-sky-chevron { transform: rotate(-90deg); }
+.cloud-sky-section.collapsed .cloud-sky-body { display: none; }
 .cloud-sky {
   position: relative;
   min-height: 96px;
@@ -561,7 +577,14 @@ button { font: inherit; }
   display: flex;
 }
 .viewer-chat-slot .cloud-sky-inner { border: none; border-radius: 0; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.viewer-chat-slot .cloud-sky-header { flex-shrink: 0; }
+.viewer-chat-slot .cloud-sky-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .viewer-chat-slot .cloud-sky { flex: 1; min-height: 0; max-height: none; }
+/* Always fully expanded while docked in the drawer — the drawer itself is
+   the "expand" gesture, a second collapse toggle on top would be noise
+   (js/app.js also strips .collapsed on dock, this is just a backstop). */
+.viewer-chat-slot .cloud-sky-section.collapsed .cloud-sky-body { display: flex; }
+.viewer-chat-slot .cloud-sky-chevron { display: none; }
 .viewer-body { flex: 1; position: relative; background: #000; }
 .viewer-body iframe { width: 100%; height: 100%; border: none; }
 .viewer-loading {
@@ -795,8 +818,36 @@ button { font: inherit; }
 @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 @media (max-width: 640px) {
-  .hero { padding: 40px 16px 24px; }
-  .hero-controls { flex-direction: column; }
+  /* Tightened so the app grid is reachable without a big scroll past
+     title/search/filters/chat first — see the section-by-section notes
+     below for what changed and why. */
+  .hero { padding: 20px 16px 16px; }
+  .hero h1 { font-size: clamp(21px, 6vw, 26px); margin-bottom: 6px; }
+  .hero-sub { font-size: 13.5px; line-height: 1.4; margin-bottom: 16px; }
+  .hero-controls { flex-direction: row; gap: 8px; }
+  .search-box { padding: 9px 12px; }
+  .search-box input { font-size: 14px; }
+  #surpriseBtn { padding: 9px 12px; font-size: 13px; white-space: nowrap; }
+
+  /* One scrollable row instead of wrapping to 2-3 rows — chips are a
+     navigation aid, not something that needs to all be visible at once
+     (same reasoning as any mobile tab bar). Bleeds to the screen edges so
+     it reads as a native scrollable strip, not a cut-off row. */
+  .chips {
+    margin-top: 14px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 0 16px 4px;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex-shrink: 0; }
+
+  .cloud-sky-section { padding: 6px 16px 0; }
+  .live-users { margin-top: 10px; }
   .submit-cta-inner { flex-direction: column; align-items: flex-start; }
 
   /* Two compact columns instead of one wide column — with 18 apps across

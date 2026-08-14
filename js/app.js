@@ -903,10 +903,34 @@
   const cloudReplyForm = document.getElementById("cloudReplyForm");
   const cloudReplyText = document.getElementById("cloudReplyText");
   const cloudSoundToggle = document.getElementById("cloudSoundToggle");
+  const cloudSkyToggle = document.getElementById("cloudSkyToggle");
   const viewerChat = document.getElementById("viewerChat");
   const viewerChatPanel = document.getElementById("viewerChatPanel");
   const viewerChatClose = document.getElementById("viewerChatClose");
   const viewerChatSlot = document.getElementById("viewerChatSlot");
+
+  /* ---------------- Collapsible cloud sky ----------------
+   * On phones, title + search + chips + the cloud band left the actual
+   * app grid scrolled below the fold. The band now starts collapsed to
+   * just its header on narrow screens (full desktop behavior unchanged),
+   * expandable with one tap, and remembers whatever a visitor last chose.
+   * Always forced fully open while docked in the viewer drawer — being in
+   * the drawer at all already IS the "expand" gesture, and the chevron
+   * hides there too (see the docked CSS overrides).
+   */
+  let cloudSkyCollapsed = false;
+  let cloudSkyDefaultDecided = false;
+  function applyCloudSkyCollapsedState() {
+    const dockedInViewer = cloudSkySection.parentNode === viewerChatSlot;
+    const effectivelyCollapsed = cloudSkyCollapsed && !dockedInViewer;
+    cloudSkySection.classList.toggle("collapsed", effectivelyCollapsed);
+    cloudSkyToggle.setAttribute("aria-expanded", String(!effectivelyCollapsed));
+  }
+  cloudSkyToggle.addEventListener("click", () => {
+    cloudSkyCollapsed = !cloudSkyCollapsed;
+    localStorage.setItem("listenit_cloud_sky_collapsed", cloudSkyCollapsed ? "1" : "0");
+    applyCloudSkyCollapsedState();
+  });
 
   /* ---------------- Live chat from inside the viewer ----------------
    * The cloud sky lives on the homepage, but once someone's inside the
@@ -924,6 +948,7 @@
   const cloudSkyHomeNextSibling = cloudSkySection.nextSibling;
   function openViewerChat() {
     viewerChatSlot.appendChild(cloudSkySection);
+    applyCloudSkyCollapsedState(); // always fully expanded once docked
     viewerChatPanel.classList.add("open");
     viewerChat.classList.add("active");
     viewerChat.classList.remove("has-unread");
@@ -935,6 +960,7 @@
     viewerChat.classList.remove("active");
     if (cloudSkyHomeNextSibling) cloudSkyHomeParent.insertBefore(cloudSkySection, cloudSkyHomeNextSibling);
     else cloudSkyHomeParent.appendChild(cloudSkySection);
+    applyCloudSkyCollapsedState(); // restore whatever the homepage preference was
   }
   viewerChat.addEventListener("click", () => {
     if (cloudSkySection.parentNode === viewerChatSlot) closeViewerChat();
@@ -1149,6 +1175,12 @@
     LI.subscribeClouds((list) => {
       cloudSkySection.classList.remove("hidden");
       viewerChat.classList.remove("hidden");
+      if (!cloudSkyDefaultDecided) {
+        cloudSkyDefaultDecided = true;
+        const stored = localStorage.getItem("listenit_cloud_sky_collapsed");
+        cloudSkyCollapsed = stored !== null ? stored === "1" : window.matchMedia("(max-width: 640px)").matches;
+        applyCloudSkyCollapsedState();
+      }
 
       // Diff against the previous snapshot to decide whether to chime —
       // skip on the very first snapshot (that's every pre-existing cloud

@@ -88,15 +88,20 @@
   <section id="cloudSkySection" class="cloud-sky-section hidden">
     <div class="cloud-sky-inner">
       <div class="cloud-sky-header">
-        <span class="cloud-sky-label">☁️ Floating chatter</span>
+        <button id="cloudSkyToggle" class="cloud-sky-toggle-btn" type="button" aria-expanded="true" aria-controls="cloudSkyBody">
+          <span class="cloud-sky-label">☁️ Floating chatter</span>
+          <svg class="cloud-sky-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <button id="cloudSoundToggle" class="btn btn-icon" type="button" aria-label="Mute cloud sounds" title="Mute sounds">🔔</button>
       </div>
-      <div id="cloudSky" class="cloud-sky" aria-label="Floating messages from other listeners" aria-live="off"></div>
-      <form id="cloudForm" class="cloud-form">
-        <input id="cloudName" type="text" maxlength="24" placeholder="Name" aria-label="Your name" class="cloud-name-input" />
-        <input id="cloudText" type="text" maxlength="100" placeholder="Say something… it'll float for a bit" aria-label="Your message" />
-        <button type="submit" class="btn btn-secondary">☁️ Float it</button>
-      </form>
+      <div id="cloudSkyBody" class="cloud-sky-body">
+        <div id="cloudSky" class="cloud-sky" aria-label="Floating messages from other listeners" aria-live="off"></div>
+        <form id="cloudForm" class="cloud-form">
+          <input id="cloudName" type="text" maxlength="24" placeholder="Name" aria-label="Your name" class="cloud-name-input" />
+          <input id="cloudText" type="text" maxlength="100" placeholder="Say something… it'll float for a bit" aria-label="Your message" />
+          <button type="submit" class="btn btn-secondary">☁️ Float it</button>
+        </form>
+      </div>
     </div>
   </section>
 
