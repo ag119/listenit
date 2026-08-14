@@ -901,6 +901,7 @@
   const cloudModalReplies = document.getElementById("cloudModalReplies");
   const cloudReplyForm = document.getElementById("cloudReplyForm");
   const cloudReplyText = document.getElementById("cloudReplyText");
+  const cloudSoundToggle = document.getElementById("cloudSoundToggle");
 
   const CLOUD_MAX_RENDERED = 24;
   const CLOUD_POST_COOLDOWN_MS = 15000;
@@ -908,8 +909,65 @@
   let clouds = {};
   let cloudRenderTimer = null;
   let activeCloudId = null;
+  let cloudSkyFirstLoad = true;
+  let lastLocalCloudActionAt = 0;
 
   cloudNameInput.value = localStorage.getItem("listenit_cloud_name") || "";
+
+  /* ---------------- Notification chime ----------------
+   * A tiny synthesized bell (Web Audio, no audio file) plays when a new
+   * cloud or reply arrives — not on the initial snapshot (that would fire
+   * once per pre-existing cloud on every page load) and not for your own
+   * just-sent message (see lastLocalCloudActionAt below). Browsers block
+   * audio before any user gesture, so the context is created/resumed
+   * lazily on first interaction and again right before each chime; if it's
+   * still suspended (no interaction yet) the chime just silently no-ops.
+   */
+  let cloudSoundEnabled = localStorage.getItem("listenit_cloud_sound") !== "off";
+  let audioCtx = null;
+  function ensureAudioCtx() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+    return audioCtx;
+  }
+  // Try to unlock/resume on any early interaction — resume() on an
+  // already-running context is a harmless no-op, so it's cheap to keep
+  // trying on every gesture rather than betting everything on exactly one.
+  ["click", "touchend", "keydown"].forEach((evt) => document.addEventListener(evt, ensureAudioCtx));
+
+  function playTone(notes) {
+    const ctx = ensureAudioCtx();
+    if (!ctx || ctx.state !== "running") return;
+    const t0 = ctx.currentTime;
+    notes.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t0 + start);
+      gain.gain.linearRampToValueAtTime(0.15, t0 + start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + start + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t0 + start);
+      osc.stop(t0 + start + dur + 0.03);
+    });
+  }
+  function playCloudChime() {
+    if (cloudSoundEnabled) playTone([{ freq: 880, start: 0, dur: 0.14 }, { freq: 1318.5, start: 0.09, dur: 0.2 }]);
+  }
+  function playReplyChime() {
+    if (cloudSoundEnabled) playTone([{ freq: 1046.5, start: 0, dur: 0.13 }]);
+  }
+  function setCloudSoundEnabled(on) {
+    cloudSoundEnabled = on;
+    localStorage.setItem("listenit_cloud_sound", on ? "on" : "off");
+    cloudSoundToggle.textContent = on ? "🔔" : "🔕";
+    cloudSoundToggle.setAttribute("aria-label", on ? "Mute cloud sounds" : "Unmute cloud sounds");
+  }
+  setCloudSoundEnabled(cloudSoundEnabled);
+  cloudSoundToggle.addEventListener("click", () => setCloudSoundEnabled(!cloudSoundEnabled));
 
   function myCloudName() {
     const name = cloudNameInput.value.trim().slice(0, 24) || "Anon";
@@ -1027,6 +1085,7 @@
     if (left > 0) { showToast(`Give it ${Math.ceil(left / 1000)}s before floating another one`); return; }
     localStorage.setItem("listenit_last_cloud_post", String(Date.now()));
     cloudTextInput.value = "";
+    lastLocalCloudActionAt = Date.now();
     const id = await LI.postCloud(myCloudName(), text);
     if (!id) showToast("Couldn't send that — try again in a bit");
     else LI.trackEvent("post_cloud", {});
@@ -1041,6 +1100,7 @@
     if (left > 0) { showToast(`Give it ${Math.ceil(left / 1000)}s before replying again`); return; }
     localStorage.setItem("listenit_last_cloud_reply", String(Date.now()));
     cloudReplyText.value = "";
+    lastLocalCloudActionAt = Date.now();
     const ok = await LI.replyToCloud(activeCloudId, myCloudName(), text);
     if (!ok) showToast("Couldn't send that reply — try again in a bit");
     else LI.trackEvent("reply_cloud", {});
@@ -1049,12 +1109,33 @@
   function startCloudSky() {
     LI.subscribeClouds((list) => {
       cloudSkySection.classList.remove("hidden");
+
+      // Diff against the previous snapshot to decide whether to chime —
+      // skip on the very first snapshot (that's every pre-existing cloud
+      // at once, not "new" arrivals) and skip right after our own
+      // post/reply (we already got instant UI feedback for that one).
+      const isFirstLoad = cloudSkyFirstLoad;
+      cloudSkyFirstLoad = false;
+      const echoingOwnAction = Date.now() - lastLocalCloudActionAt < 4000;
+      let heardNewCloud = false;
+      let heardNewReply = false;
+      if (!isFirstLoad && !echoingOwnAction) {
+        list.forEach((c) => {
+          const prev = clouds[c.id];
+          if (!prev) heardNewCloud = true;
+          else if ((c.replyCount || 0) > (prev.replyCount || 0)) heardNewReply = true;
+        });
+      }
+
       clouds = {};
       list.forEach((c) => { clouds[c.id] = c; });
       renderCloudSky();
       if (activeCloudId && clouds[activeCloudId]) renderCloudReplies(clouds[activeCloudId]);
       else if (activeCloudId && !clouds[activeCloudId]) closeCloudModal(); // vanished (expired/pruned) while open
       if (!cloudRenderTimer) cloudRenderTimer = setInterval(renderCloudSky, 5000);
+
+      if (heardNewCloud) playCloudChime();
+      else if (heardNewReply) playReplyChime();
     });
   }
 

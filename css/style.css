@@ -231,6 +231,14 @@ button { font: inherit; }
   background: var(--bg-elev);
   overflow: hidden;
 }
+.cloud-sky-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 0 16px;
+}
+.cloud-sky-label { font-size: 12px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+#cloudSoundToggle { width: 30px; height: 30px; }
 .cloud-sky {
   position: relative;
   min-height: 96px;
