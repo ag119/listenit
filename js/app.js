@@ -653,6 +653,7 @@
     document.getElementById("viewerReactions").classList.add("hidden");
     document.getElementById("viewerRating").classList.add("hidden");
     currentApp = null;
+    closeViewerChat(); // safety net — cloud sky must return home even if chat was left open
     if (pushState && location.search.includes("app=")) {
       history.pushState({}, "", location.pathname);
     }
@@ -902,6 +903,44 @@
   const cloudReplyForm = document.getElementById("cloudReplyForm");
   const cloudReplyText = document.getElementById("cloudReplyText");
   const cloudSoundToggle = document.getElementById("cloudSoundToggle");
+  const viewerChat = document.getElementById("viewerChat");
+  const viewerChatPanel = document.getElementById("viewerChatPanel");
+  const viewerChatClose = document.getElementById("viewerChatClose");
+  const viewerChatSlot = document.getElementById("viewerChatSlot");
+
+  /* ---------------- Live chat from inside the viewer ----------------
+   * The cloud sky lives on the homepage, but once someone's inside the
+   * full-screen viewer (playing an embedded app) it's covered up like
+   * everything else there. Rather than a second, parallel chat UI, the
+   * exact same #cloudSkySection node gets physically moved into a
+   * slide-in drawer docked to the viewer (and moved back on close) — same
+   * elements, same event listeners, nothing to keep in sync. Closed by
+   * default (translated off-screen, not just visually hidden) so it can
+   * never sit on top of the embedded app's own controls unless someone
+   * deliberately opens it — the reaction-strip-over-play-button bug from
+   * earlier in this project is exactly what this is built to avoid.
+   */
+  const cloudSkyHomeParent = cloudSkySection.parentNode;
+  const cloudSkyHomeNextSibling = cloudSkySection.nextSibling;
+  function openViewerChat() {
+    viewerChatSlot.appendChild(cloudSkySection);
+    viewerChatPanel.classList.add("open");
+    viewerChat.classList.add("active");
+    viewerChat.classList.remove("has-unread");
+    LI.trackEvent("open_viewer_chat", {});
+  }
+  function closeViewerChat() {
+    if (cloudSkySection.parentNode !== viewerChatSlot) return; // already home, nothing to do
+    viewerChatPanel.classList.remove("open");
+    viewerChat.classList.remove("active");
+    if (cloudSkyHomeNextSibling) cloudSkyHomeParent.insertBefore(cloudSkySection, cloudSkyHomeNextSibling);
+    else cloudSkyHomeParent.appendChild(cloudSkySection);
+  }
+  viewerChat.addEventListener("click", () => {
+    if (cloudSkySection.parentNode === viewerChatSlot) closeViewerChat();
+    else openViewerChat();
+  });
+  viewerChatClose.addEventListener("click", closeViewerChat);
 
   const CLOUD_MAX_RENDERED = 24;
   const CLOUD_POST_COOLDOWN_MS = 15000;
@@ -1109,6 +1148,7 @@
   function startCloudSky() {
     LI.subscribeClouds((list) => {
       cloudSkySection.classList.remove("hidden");
+      viewerChat.classList.remove("hidden");
 
       // Diff against the previous snapshot to decide whether to chime —
       // skip on the very first snapshot (that's every pre-existing cloud
@@ -1136,6 +1176,13 @@
 
       if (heardNewCloud) playCloudChime();
       else if (heardNewReply) playReplyChime();
+
+      // Badge the in-viewer chat button when there's something new and the
+      // visitor can't already see it (viewer open, drawer not the one
+      // currently showing the cloud sky).
+      if ((heardNewCloud || heardNewReply) && !viewer.classList.contains("hidden") && cloudSkySection.parentNode !== viewerChatSlot) {
+        viewerChat.classList.add("has-unread");
+      }
     });
   }
 
@@ -1160,6 +1207,9 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
+      // Closes just the drawer first, not the whole viewer underneath it —
+      // pressing Escape once shouldn't also kill whatever's playing.
+      if (cloudSkySection.parentNode === viewerChatSlot) { closeViewerChat(); return; }
       if (!viewer.classList.contains("hidden")) closeViewer();
       if (!submitModal.classList.contains("hidden")) closeSubmitModal();
       if (!cloudModal.classList.contains("hidden")) closeCloudModal();

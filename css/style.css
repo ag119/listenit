@@ -510,6 +510,59 @@ button { font: inherit; }
 #viewerFav.active path { fill: currentColor; }
 #viewerPip.active { color: var(--accent-2); }
 #viewerPip.active rect:last-child { fill: currentColor; }
+#viewerChat.active { color: var(--accent-2); }
+#viewerChat { position: relative; }
+.chat-unread-dot {
+  display: none;
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  border: 1.5px solid var(--bg-elev);
+}
+#viewerChat.has-unread .chat-unread-dot { display: block; }
+
+/* Slide-in drawer so the live chat is reachable from inside the viewer too
+   (see cloud sky note above) — closed by default (translated fully off
+   the visible viewport, not just hidden), so it can never intercept a
+   click on the embedded app underneath unless a visitor deliberately
+   opens it. #cloudSkySection itself gets moved in here on open and moved
+   back to its normal spot on the homepage on close (js/app.js) — same
+   node, same listeners, no separate chat implementation to keep in sync. */
+.viewer-chat-panel {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(380px, 92vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 24px rgba(0,0,0,0.35);
+  transform: translateX(100%);
+  transition: transform .22s ease;
+  z-index: 5;
+}
+.viewer-chat-panel.open { transform: translateX(0); }
+.viewer-chat-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.viewer-chat-slot { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.viewer-chat-slot .cloud-sky-section {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.viewer-chat-slot .cloud-sky-inner { border: none; border-radius: 0; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.viewer-chat-slot .cloud-sky { flex: 1; min-height: 0; max-height: none; }
 .viewer-body { flex: 1; position: relative; background: #000; }
 .viewer-body iframe { width: 100%; height: 100%; border: none; }
 .viewer-loading {

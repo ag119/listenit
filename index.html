@@ -144,7 +144,20 @@
       <button id="viewerPip" class="btn btn-icon hidden" type="button" aria-label="Pop out to a floating window" title="Pop out (Picture-in-Picture)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><rect x="11" y="10" width="8" height="6" rx="1" fill="currentColor"/></svg>
       </button>
+      <button id="viewerChat" class="btn btn-icon hidden" type="button" aria-label="Open live chat" title="Live chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H9l-4 4V5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <span class="chat-unread-dot" aria-hidden="true"></span>
+      </button>
     </div>
+  </div>
+  <div id="viewerChatPanel" class="viewer-chat-panel">
+    <div class="viewer-chat-panel-header">
+      <strong>💬 Live chat</strong>
+      <button id="viewerChatClose" class="btn btn-icon" type="button" aria-label="Close chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="viewerChatSlot" class="viewer-chat-slot"></div>
   </div>
   <div class="viewer-body">
     <div id="viewerLoading" class="viewer-loading">
