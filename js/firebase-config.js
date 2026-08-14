@@ -38,5 +38,8 @@ window.ListenIt = {
   subscribeLiveUsers() { return () => {}; },
   async getApps() { return []; },
   async rate() {},
-  async getAllRatings() { return {}; }
+  async getAllRatings() { return {}; },
+  async postCloud() { return null; },
+  async replyToCloud() { return false; },
+  subscribeClouds() { return () => {}; }
 };

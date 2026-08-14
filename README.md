@@ -85,16 +85,21 @@ node scripts/healthcheck.mjs
 
 For the workflow's auto-commit step to work on GitHub, enable write access once: **Settings → Actions → General → Workflow permissions → Read and write permissions**. You can also trigger it on demand from the **Actions** tab (`Health check listed apps` → **Run workflow**).
 
-## Firebase (analytics, trending, ratings, reactions, live users, remote app list)
+## Firebase (analytics, trending, ratings, reactions, live users, remote app list, message clouds)
 
-Seven features run on Firebase, all client-only for now (no custom backend — see "Is this safe?" below):
+These features run on Firebase, all client-only for now (no custom backend — see "Is this safe?" below):
 
 - **App listings** — apps can be added straight to Firestore and show up on next page load, no redeploy. See "Adding an app without redeploying" below.
-- **Analytics** — page views + custom events (which app got opened, Surprise Me clicks, submissions, installs, favorites, shares, reactions, ratings, category filters, searches). See every `LI.trackEvent(...)` call in `js/app.js`.
+- **Analytics** — page views + custom events (which app got opened, Surprise Me clicks, submissions, installs, favorites, shares, reactions, ratings, category filters, searches, clouds). See every `LI.trackEvent(...)` call in `js/app.js`.
 - **Trending** — a `plays` counter per app in Firestore, bumped every time someone opens it. Cards show a `🔥 N` count once `N > 0`.
 - **Ratings** — a 1–5 star rating per app, shown as a floating strip in the viewer (mirrors the reactions strip, opposite edge). Each browser can rate an app once (tracked in `localStorage`); once cast, a rating can't be changed — see "Is this safe?" for why. Cards show `⭐ avg (N)` once at least one rating exists — the vote count matters here, IMDb-style, because of how ranking works below.
 - **Reactions** — 🔥❤️😢 counters per app in Firestore, shown as a floating bar in the viewer. Each browser can react once per app per emoji (tracked in `localStorage`, not bulletproof, fine for a hobby site).
 - **Live user count** — "N people listening right now" in the hero, via Realtime Database's standard presence pattern (anonymous auth + `onDisconnect()`).
+- **Message clouds** — a small band below the hero (`#cloudSkySection`) where anyone can post a short message that floats as a "cloud" and fades away on its own. Built on Realtime Database:
+  - A fresh cloud lives ~3 minutes. Each reply bumps its size and extends its life by up to 60s, capped at 30 minutes total — so a thread people are actually replying to sticks around longer, but nothing floats forever.
+  - RTDB has no server-side TTL, so expiry is two-layered: `database.rules.json` caps how far any single write can push `expiresAt` into the future (so a client can't just set a huge TTL), and the browser only ever *renders* clouds whose `expiresAt` hasn't passed yet — an "expired" cloud simply stops being drawn, nothing has to delete it in the moment. `scripts/clean-clouds.mjs` prunes actually-expired clouds from the database later (safe to run any time, e.g. from cron) so `/clouds` doesn't grow forever; nothing on the site depends on that script ever running.
+  - Deliberately an in-flow section, not an overlay — clouds can only ever cover their own bounded, scrollable box, never the header, grid, viewer, or any other clickable part of the page.
+  - Names and messages are capped (24 / 100 characters, enforced by both the UI and the rules) and always rendered via `textContent`, never `innerHTML`, so a message can't inject markup. There's no auth or moderation beyond that — same trust level as reactions/ratings, fine for a hobby site's traffic, but worth knowing before pointing a large audience at it.
 - **Mix** — a featured section at the top of the "All" browse view, one app per category. Picks each category's top-ranked app most of the time, but ~30% of the time (`MIX_DISCOVERY_CHANCE` in `js/app.js`) surfaces a different app from that category instead, so things without ratings yet still get seen; a category where every app ties (most commonly because nobody's rated anything there yet) just shuffles among the tied leaders. Computed once per page load (not re-shuffled every time something unrelated re-renders the grid) and never surfaces a known-down app.
 - **Picture-in-Picture** — a pop-out button in the viewer (only shown when the browser supports the [Document Picture-in-Picture API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API) — currently Chromium-based browsers only) moves the live iframe into a small always-on-top floating window, so an app can keep playing while you browse the rest of the site or switch tabs entirely. There's only one iframe to go around, so opening any other app reclaims it and closes the floating window first.
 
@@ -123,6 +128,7 @@ Yes, with one thing to get right. The config in `js/firebase-config.js` is **not
 - The `apps` collection (what gets listed and loaded into the iframe viewer) is **read-only from the client** — `allow write: if false`, full stop. This matters more than the increment-only counters below: if visitors could write here, anyone could inject an arbitrary URL into your directory and have it load inside your site's viewer. You add entries with your own admin credentials (Console or `scripts/add-app.mjs`), which bypass rules entirely — that's expected, rules only govern the client SDK.
 - `appStats`, `reactions` and `ratings` are increment-only: a client can bump `plays` by exactly 1, the sum of the reaction counters by exactly 1, or (for ratings) `count` by exactly 1 with `sum` rising by 1–5 in that same write, and touch nothing else — no arbitrary values, no decrementing. This is also why a submitted rating can't be edited: there's no "subtract the old value" a client is allowed to do, only ever add a new one. See the rules files for the exact logic.
 - Presence writes are locked to `presence/{your-own-anonymous-uid}`, set to `true` only — you can't write another user's key or arbitrary data.
+- Message clouds (`/clouds` in the Realtime Database) are the one collection here with genuinely open-ended, free-text content rather than fixed values — the rules still enforce length caps, a create-only history (nothing can be edited or deleted once written), and bounded TTL growth per write, but there's no auth or moderation on *what* someone writes, only *how much* and *how long it stays up*. Reasonable for a hobby site's traffic; something to know before pointing a large audience at it.
 - The one genuine secret in this setup is `serviceAccountKey.json` (used only by the `scripts/*.mjs` admin scripts, run locally/by you, never shipped to the site). It's in `.gitignore` — never commit it.
 
 ### Setup steps
@@ -131,7 +137,7 @@ Yes, with one thing to get right. The config in `js/firebase-config.js` is **not
 2. **Add a Web App**: Project settings (⚙️) → General → Your apps → `</>` (Web). Copy the `firebaseConfig` object it gives you into `js/firebase-config.js`, replacing the `YOUR_...` placeholders.
 3. **Enable Firestore**: Build → Firestore Database → Create database → production mode, any region.
 4. **Enable Realtime Database**: Build → Realtime Database → Create database → any region, locked mode. Copy its URL into `databaseURL` in `js/firebase-config.js` (Project settings won't show this one — grab it from the Realtime Database page itself, looks like `https://<project-id>-default-rtdb.<region>.firebasedatabase.app`).
-5. **Enable Anonymous auth** (needed for the live user count): Build → Authentication → Get started → Sign-in method → Anonymous → Enable.
+5. **Enable Anonymous auth** (needed for the live user count and message clouds): Build → Authentication → Get started → Sign-in method → Anonymous → Enable.
 6. **Deploy the security rules**:
    ```bash
    npm install -g firebase-tools   # once
@@ -257,9 +263,10 @@ scripts/healthcheck.mjs  Node script that curls every app and writes status.json
 js/firebase-config.js    Firebase web config (public) + no-op stub, always loaded
 js/firebase-app.mjs      Real Firebase init — upgrades the stub if configured, no-ops otherwise
 firestore.rules          Firestore security rules (increment-only counters)
-database.rules.json      Realtime Database security rules (presence)
+database.rules.json      Realtime Database security rules (presence, message clouds)
 firebase.json            Firebase CLI project config (which rules file is which)
 scripts/seed-firebase.mjs  Pre-creates the Firestore docs the rules require (needs serviceAccountKey.json, gitignored)
 scripts/add-app.mjs      Adds one app to Firestore (listing + stats docs) without redeploying
 scripts/sync-apps.mjs    Upserts the entire js/apps-data.js list into Firestore in one shot
+scripts/clean-clouds.mjs  Deletes expired message clouds from Realtime Database (optional, RTDB has no TTL of its own)
 ```

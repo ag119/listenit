@@ -131,7 +131,7 @@ async function init() {
     try {
       const { getAuth, signInAnonymously, onAuthStateChanged } =
         await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-auth.js`);
-      const { getDatabase, ref, onValue, onDisconnect, set, off } =
+      const { getDatabase, ref, onValue, onDisconnect, set, off, push, get, update, serverTimestamp } =
         await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-database.js`);
 
       const auth = getAuth(app);
@@ -164,8 +164,91 @@ async function init() {
         onValue(presenceRef, handler);
         return () => off(presenceRef, "value", handler);
       };
+
+      /* ---------------- Message clouds ----------------
+       * Floating, self-expiring public messages. RTDB has no server-side
+       * TTL, so expiry is enforced two ways: database.rules.json caps how
+       * far a write can push expiresAt into the future, and the client
+       * only ever renders clouds whose expiresAt is still ahead of
+       * Date.now() (see js/app.js) — an expired cloud just stops being
+       * drawn, nothing has to delete it (scripts/clean-clouds.mjs prunes
+       * them from the DB later so it doesn't grow forever).
+       */
+      const CLOUD_BASE_TTL_MS = 3 * 60 * 1000;
+      const CLOUD_REPLY_BONUS_MS = 60 * 1000;
+      const CLOUD_MAX_LIFETIME_MS = 30 * 60 * 1000;
+      const CLOUD_MAX_REPLIES = 40;
+
+      window.ListenIt.postCloud = async (name, text) => {
+        if (!user) return null;
+        const newRef = push(ref(rtdb, "clouds"));
+        try {
+          await set(newRef, {
+            name: String(name).trim().slice(0, 24),
+            text: String(text).trim().slice(0, 100),
+            createdAt: serverTimestamp(),
+            expiresAt: Date.now() + CLOUD_BASE_TTL_MS,
+            replyCount: 0
+          });
+          return newRef.key;
+        } catch (e) {
+          return null;
+        }
+      };
+
+      // A plain multi-path update (not a transaction — RTDB transactions
+      // re-validate the *entire* node on commit, which would trip the
+      // create-only rule on every existing reply). Reads current
+      // replyCount/expiresAt first to compute the bump, so two replies
+      // landing in the same instant can in theory race and the loser gets
+      // rejected by the rules — acceptable at this site's scale (same
+      // trust level as reactions/ratings), and worth one retry rather than
+      // silently dropping the reply.
+      async function attemptReply(cloudId, name, text) {
+        const snap = await get(ref(rtdb, `clouds/${cloudId}`));
+        if (!snap.exists()) return false;
+        const cur = snap.val();
+        if ((cur.replyCount || 0) >= CLOUD_MAX_REPLIES) return false;
+        const replyKey = push(ref(rtdb, `clouds/${cloudId}/replies`)).key;
+        const newExpiresAt = Math.min(
+          (cur.expiresAt || Date.now()) + CLOUD_REPLY_BONUS_MS,
+          (cur.createdAt || Date.now()) + CLOUD_MAX_LIFETIME_MS
+        );
+        await update(ref(rtdb), {
+          [`clouds/${cloudId}/replyCount`]: (cur.replyCount || 0) + 1,
+          [`clouds/${cloudId}/expiresAt`]: newExpiresAt,
+          [`clouds/${cloudId}/replies/${replyKey}`]: {
+            name: String(name).trim().slice(0, 24),
+            text: String(text).trim().slice(0, 100),
+            createdAt: serverTimestamp()
+          }
+        });
+        return true;
+      }
+      window.ListenIt.replyToCloud = async (cloudId, name, text) => {
+        if (!user) return false;
+        try {
+          return await attemptReply(cloudId, name, text);
+        } catch (e) {
+          try {
+            return await attemptReply(cloudId, name, text); // one retry against fresh data
+          } catch (e2) {
+            return false;
+          }
+        }
+      };
+
+      window.ListenIt.subscribeClouds = (cb) => {
+        const cloudsRef = ref(rtdb, "clouds");
+        const handler = (snap) => {
+          const val = snap.val() || {};
+          cb(Object.keys(val).map((id) => ({ id, ...val[id] })));
+        };
+        onValue(cloudsRef, handler);
+        return () => off(cloudsRef, "value", handler);
+      };
     } catch (e) {
-      console.warn("[ListenIt] Live user count unavailable", e);
+      console.warn("[ListenIt] Live user count / message clouds unavailable", e);
     }
   }
 

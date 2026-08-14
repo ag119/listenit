@@ -85,6 +85,17 @@
     </div>
   </section>
 
+  <section id="cloudSkySection" class="cloud-sky-section hidden">
+    <div class="cloud-sky-inner">
+      <div id="cloudSky" class="cloud-sky" aria-label="Floating messages from other listeners" aria-live="off"></div>
+      <form id="cloudForm" class="cloud-form">
+        <input id="cloudName" type="text" maxlength="24" placeholder="Name" aria-label="Your name" class="cloud-name-input" />
+        <input id="cloudText" type="text" maxlength="100" placeholder="Say something… it'll float for a bit" aria-label="Your message" />
+        <button type="submit" class="btn btn-secondary">☁️ Float it</button>
+      </form>
+    </div>
+  </section>
+
   <section class="grid-section">
     <div id="grid" class="grid-sections"></div>
     <p id="emptyState" class="empty-state hidden">No apps match that search. Try a different word — or <button id="emptySubmitBtn" class="link-btn" type="button">submit your own</button>.</p>
@@ -201,6 +212,25 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
         Send on WhatsApp
       </button>
+    </form>
+  </div>
+</div>
+
+<!-- Cloud reply modal -->
+<div id="cloudModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
+  <div class="modal-backdrop" id="cloudBackdrop"></div>
+  <div class="modal-panel cloud-modal-panel">
+    <div class="modal-header">
+      <h2 id="cloudModalTitle">☁️ Thread</h2>
+      <button id="cloudModalClose" class="btn btn-icon" type="button" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="cloudModalOriginal" class="cloud-modal-original"></div>
+    <div id="cloudModalReplies" class="cloud-modal-replies"></div>
+    <form id="cloudReplyForm" class="cloud-reply-form">
+      <input id="cloudReplyText" type="text" maxlength="100" placeholder="Reply…" aria-label="Your reply" />
+      <button type="submit" class="btn btn-primary">Reply</button>
     </form>
   </div>
 </div>

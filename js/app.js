@@ -877,12 +877,194 @@
     });
   }
 
+  /* ---------------- Message clouds ----------------
+   * Floating, self-expiring public messages (Realtime Database — see
+   * js/firebase-app.mjs and database.rules.json). The whole feature stays
+   * hidden until a real subscribeClouds callback actually fires; on the
+   * no-op stub (Firebase unconfigured, or the RTDB block failed to wire
+   * up) that never happens, so there's simply nothing to show.
+   *
+   * The band is a normal in-flow section, not an overlay — clouds can
+   * only ever cover their own bounded box, never the header, grid, or
+   * viewer, and every user string is written via textContent, never
+   * innerHTML, so a message can't inject markup.
+   */
+  const cloudSkySection = document.getElementById("cloudSkySection");
+  const cloudSky = document.getElementById("cloudSky");
+  const cloudForm = document.getElementById("cloudForm");
+  const cloudNameInput = document.getElementById("cloudName");
+  const cloudTextInput = document.getElementById("cloudText");
+  const cloudModal = document.getElementById("cloudModal");
+  const cloudBackdrop = document.getElementById("cloudBackdrop");
+  const cloudModalClose = document.getElementById("cloudModalClose");
+  const cloudModalOriginal = document.getElementById("cloudModalOriginal");
+  const cloudModalReplies = document.getElementById("cloudModalReplies");
+  const cloudReplyForm = document.getElementById("cloudReplyForm");
+  const cloudReplyText = document.getElementById("cloudReplyText");
+
+  const CLOUD_MAX_RENDERED = 24;
+  const CLOUD_POST_COOLDOWN_MS = 15000;
+  const CLOUD_REPLY_COOLDOWN_MS = 8000;
+  let clouds = {};
+  let cloudRenderTimer = null;
+  let activeCloudId = null;
+
+  cloudNameInput.value = localStorage.getItem("listenit_cloud_name") || "";
+
+  function myCloudName() {
+    const name = cloudNameInput.value.trim().slice(0, 24) || "Anon";
+    localStorage.setItem("listenit_cloud_name", name);
+    return name;
+  }
+
+  function cloudCooldownLeft(key, ms) {
+    const last = Number(localStorage.getItem(key) || 0);
+    return Math.max(0, ms - (Date.now() - last));
+  }
+
+  function cloudScaleFor(replyCount) {
+    return Math.min(1 + (replyCount || 0) * 0.05, 1.8);
+  }
+
+  // Small stable per-cloud stagger so bobbing bubbles don't move in lockstep.
+  function cloudDelayFor(id) {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 1000;
+    return (h / 1000) * -4.5 + "s";
+  }
+
+  function renderCloudSky() {
+    const now = Date.now();
+    const active = Object.values(clouds)
+      .filter((c) => c.expiresAt > now)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      .slice(0, CLOUD_MAX_RENDERED);
+
+    cloudSky.innerHTML = "";
+    if (!active.length) {
+      const empty = document.createElement("p");
+      empty.className = "cloud-sky-empty";
+      empty.textContent = "No messages floating right now — say something below.";
+      cloudSky.appendChild(empty);
+      return;
+    }
+
+    active.forEach((c) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "cloud";
+      if (c.expiresAt - now < 20000) el.classList.add("fading");
+      el.style.setProperty("--cloud-scale", cloudScaleFor(c.replyCount));
+      el.style.setProperty("--cloud-delay", cloudDelayFor(c.id));
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "cloud-name";
+      nameSpan.textContent = (c.name || "Anon") + ":";
+      el.appendChild(nameSpan);
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "cloud-text";
+      textSpan.textContent = c.text || "";
+      el.appendChild(textSpan);
+
+      if (c.replyCount > 0) {
+        const repliesSpan = document.createElement("span");
+        repliesSpan.className = "cloud-replies";
+        repliesSpan.textContent = `· ${c.replyCount} ${c.replyCount === 1 ? "reply" : "replies"}`;
+        el.appendChild(repliesSpan);
+      }
+
+      el.addEventListener("click", () => openCloudModal(c.id));
+      cloudSky.appendChild(el);
+    });
+  }
+
+  function renderCloudReplies(c) {
+    cloudModalReplies.innerHTML = "";
+    const replies = Object.values(c.replies || {}).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    replies.forEach((r) => {
+      const item = document.createElement("div");
+      item.className = "cloud-reply-item";
+      const nameSpan = document.createElement("strong");
+      nameSpan.textContent = (r.name || "Anon") + ": ";
+      item.appendChild(nameSpan);
+      item.appendChild(document.createTextNode(r.text || ""));
+      cloudModalReplies.appendChild(item);
+    });
+  }
+
+  function openCloudModal(id) {
+    const c = clouds[id];
+    if (!c) return;
+    activeCloudId = id;
+
+    cloudModalOriginal.innerHTML = "";
+    const nameSpan = document.createElement("strong");
+    nameSpan.textContent = (c.name || "Anon") + ": ";
+    cloudModalOriginal.appendChild(nameSpan);
+    cloudModalOriginal.appendChild(document.createTextNode(c.text || ""));
+    renderCloudReplies(c);
+
+    cloudModal.classList.remove("hidden");
+    lockBodyScroll();
+    cloudReplyText.value = "";
+    cloudReplyText.focus();
+  }
+
+  function closeCloudModal() {
+    cloudModal.classList.add("hidden");
+    unlockBodyScroll();
+    activeCloudId = null;
+  }
+  cloudModalClose.addEventListener("click", closeCloudModal);
+  cloudBackdrop.addEventListener("click", closeCloudModal);
+
+  cloudForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = cloudTextInput.value.trim();
+    if (!text) return;
+    const left = cloudCooldownLeft("listenit_last_cloud_post", CLOUD_POST_COOLDOWN_MS);
+    if (left > 0) { showToast(`Give it ${Math.ceil(left / 1000)}s before floating another one`); return; }
+    localStorage.setItem("listenit_last_cloud_post", String(Date.now()));
+    cloudTextInput.value = "";
+    const id = await LI.postCloud(myCloudName(), text);
+    if (!id) showToast("Couldn't send that — try again in a bit");
+    else LI.trackEvent("post_cloud", {});
+  });
+
+  cloudReplyForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!activeCloudId) return;
+    const text = cloudReplyText.value.trim();
+    if (!text) return;
+    const left = cloudCooldownLeft("listenit_last_cloud_reply", CLOUD_REPLY_COOLDOWN_MS);
+    if (left > 0) { showToast(`Give it ${Math.ceil(left / 1000)}s before replying again`); return; }
+    localStorage.setItem("listenit_last_cloud_reply", String(Date.now()));
+    cloudReplyText.value = "";
+    const ok = await LI.replyToCloud(activeCloudId, myCloudName(), text);
+    if (!ok) showToast("Couldn't send that reply — try again in a bit");
+    else LI.trackEvent("reply_cloud", {});
+  });
+
+  function startCloudSky() {
+    LI.subscribeClouds((list) => {
+      cloudSkySection.classList.remove("hidden");
+      clouds = {};
+      list.forEach((c) => { clouds[c.id] = c; });
+      renderCloudSky();
+      if (activeCloudId && clouds[activeCloudId]) renderCloudReplies(clouds[activeCloudId]);
+      else if (activeCloudId && !clouds[activeCloudId]) closeCloudModal(); // vanished (expired/pruned) while open
+      if (!cloudRenderTimer) cloudRenderTimer = setInterval(renderCloudSky, 5000);
+    });
+  }
+
   window.addEventListener("listenit-firebase-ready", (e) => {
     if (!e.detail || !e.detail.ok) return;
     loadFirebaseApps();
     loadTrending();
     loadRatings();
     startLiveUserCount();
+    startCloudSky();
   });
 
   window.addEventListener("popstate", () => {
@@ -899,6 +1081,7 @@
     if (e.key === "Escape") {
       if (!viewer.classList.contains("hidden")) closeViewer();
       if (!submitModal.classList.contains("hidden")) closeSubmitModal();
+      if (!cloudModal.classList.contains("hidden")) closeCloudModal();
     }
   });
 

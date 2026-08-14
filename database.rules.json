@@ -9,6 +9,60 @@
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.isBoolean() && newData.val() === true"
       }
+    },
+
+    // Floating "message cloud" board — see js/app.js / README "Message
+    // clouds". A cloud is create-then-increment-only: the client can make a
+    // new one, or bump an existing one's replyCount/expiresAt together with
+    // one brand-new reply child, but never edit or delete anything once
+    // written (no auth/identity here, same trust model as reactions/ratings
+    // — good enough for a hobby site, not abuse-proof against a determined
+    // attacker hitting the REST API directly).
+    "clouds": {
+      ".read": true,
+      ".indexOn": ["expiresAt"],
+      "$cloudId": {
+        // Create a new cloud, or update one in place via a reply below —
+        // never delete one client-side (that's admin-only, see
+        // scripts/clean-clouds.mjs).
+        ".write": "auth != null && !(data.exists() && !newData.exists())",
+        ".validate": "newData.hasChildren(['name', 'text', 'createdAt', 'expiresAt', 'replyCount'])",
+
+        "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24" },
+        "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+
+        // Immutable once set.
+        "createdAt": {
+          ".validate": "data.exists() ? newData.val() == data.val() : newData.val() == now"
+        },
+
+        // A fresh cloud lives ~3 minutes. Each reply may push it out by up
+        // to 60s more, but never past 30 minutes total from createdAt —
+        // popular clouds float longer, nothing floats forever.
+        "expiresAt": {
+          ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() <= data.val() + 60000 && newData.val() <= newData.parent().child('createdAt').val() + 1800000) : (newData.val() > now && newData.val() <= now + 190000))"
+        },
+
+        // Must go up by exactly 1 per write, capped at 40 — this is also
+        // what a reply write is allowed to touch on the parent, alongside
+        // expiresAt above.
+        "replyCount": {
+          ".validate": "newData.isNumber() && (data.exists() ? (newData.val() == data.val() + 1 && data.val() < 40) : newData.val() == 0)"
+        },
+
+        "replies": {
+          "$replyId": {
+            // Create-only — a reply can never be edited or removed once
+            // written.
+            ".validate": "!data.exists() && newData.hasChildren(['name', 'text', 'createdAt'])",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24" },
+            "text": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+            "createdAt": { ".validate": "newData.val() == now" }
+          }
+        },
+
+        "$other": { ".validate": false }
+      }
     }
   }
 }

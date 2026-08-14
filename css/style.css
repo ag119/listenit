@@ -217,6 +217,102 @@ button { font: inherit; }
   color: #fff;
 }
 
+/* ===== Cloud sky =====
+ * Deliberately an in-flow section (not a fixed/absolute overlay) — clouds
+ * only ever live inside this bounded, overflow-hidden band, so they can
+ * never drift on top of the header, grid, or viewer. The band itself sits
+ * fully in the normal document flow, pushing content below it down like
+ * any other section, so it can't hinder anything else on the page either.
+ */
+.cloud-sky-section { max-width: 1100px; margin: 0 auto; padding: 8px 20px 0; }
+.cloud-sky-inner {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+.cloud-sky {
+  position: relative;
+  min-height: 96px;
+  max-height: 170px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.cloud-sky-empty { color: var(--text-faint); font-size: 13px; margin: auto; }
+.cloud {
+  --cloud-scale: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  padding: calc(6px * var(--cloud-scale)) calc(14px * var(--cloud-scale));
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  font-size: calc(12.5px + 1.5px * (var(--cloud-scale) - 1));
+  line-height: 1.4;
+  cursor: pointer;
+  transition: opacity .6s ease, transform .16s ease, border-color .16s ease;
+  animation: cloudBob 4.5s ease-in-out infinite;
+  animation-delay: var(--cloud-delay, 0s);
+}
+.cloud:hover { transform: translateY(-2px); border-color: var(--accent); }
+.cloud.fading { opacity: 0.35; }
+.cloud-name { font-weight: 700; color: var(--accent-2); white-space: nowrap; }
+.cloud-text { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46vw; }
+.cloud-replies { color: var(--text-faint); font-size: 0.85em; white-space: nowrap; }
+@keyframes cloudBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud { animation: none; }
+}
+.cloud-form { display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--border); }
+.cloud-form input {
+  min-width: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+.cloud-form input:focus { border-color: var(--accent); }
+.cloud-name-input { flex: 0 0 110px; }
+#cloudText { flex: 1; }
+@media (max-width: 640px) {
+  .cloud-text { max-width: 38vw; }
+  .cloud-form { flex-wrap: wrap; }
+  .cloud-name-input { flex: 1 1 100%; }
+  #cloudText { flex: 1 1 auto; }
+}
+
+.cloud-modal-panel { max-width: 420px; }
+.cloud-modal-original { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--bg-elev-2); margin: 4px 0 12px; font-size: 14px; }
+.cloud-modal-replies { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.cloud-modal-replies:empty::after { content: "No replies yet — be the first."; color: var(--text-faint); font-size: 13px; }
+.cloud-reply-item { font-size: 13.5px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.cloud-reply-item:last-child { border-bottom: none; padding-bottom: 0; }
+.cloud-reply-form { display: flex; gap: 8px; }
+.cloud-reply-form input {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+.cloud-reply-form input:focus { border-color: var(--accent); }
+
 /* ===== Grid ===== */
 .grid-section { max-width: 1100px; margin: 0 auto; padding: 36px 20px 10px; }
 .grid-sections { display: flex; flex-direction: column; gap: 44px; }
