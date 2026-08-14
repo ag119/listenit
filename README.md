@@ -32,7 +32,8 @@ Edit [`js/apps-data.js`](js/apps-data.js) — it's a plain array, one object per
   category: "Ambient Radio",       // groups apps into filter chips AND the section
                                     // headers shown when browsing "All" — reuse an
                                     // existing category string to land in that
-                                    // section, see CATEGORY_ORDER in js/app.js
+                                    // section, ordered dynamically by rating —
+                                    // see categoryWeightedScore in js/app.js
   thumbnail: "thumbnails/example.jpg",  // fallback image, see below
   embeddable: true,                // set false if the site blocks iframes
                                     // (sends X-Frame-Options / CSP frame-ancestors) —
@@ -91,10 +92,27 @@ Seven features run on Firebase, all client-only for now (no custom backend — s
 - **App listings** — apps can be added straight to Firestore and show up on next page load, no redeploy. See "Adding an app without redeploying" below.
 - **Analytics** — page views + custom events (which app got opened, Surprise Me clicks, submissions, installs, favorites, shares, reactions, ratings, category filters, searches). See every `LI.trackEvent(...)` call in `js/app.js`.
 - **Trending** — a `plays` counter per app in Firestore, bumped every time someone opens it. Cards show a `🔥 N` count once `N > 0`.
-- **Ratings** — a 1–5 star rating per app, shown as a floating strip in the viewer (mirrors the reactions strip, opposite edge). Each browser can rate an app once (tracked in `localStorage`); once cast, a rating can't be changed — see "Is this safe?" for why. The grid sorts by average rating first, `plays` as the tiebreak, and cards show `⭐ avg` once at least one rating exists.
+- **Ratings** — a 1–5 star rating per app, shown as a floating strip in the viewer (mirrors the reactions strip, opposite edge). Each browser can rate an app once (tracked in `localStorage`); once cast, a rating can't be changed — see "Is this safe?" for why. Cards show `⭐ avg (N)` once at least one rating exists — the vote count matters here, IMDb-style, because of how ranking works below.
 - **Reactions** — 🔥❤️😢 counters per app in Firestore, shown as a floating bar in the viewer. Each browser can react once per app per emoji (tracked in `localStorage`, not bulletproof, fine for a hobby site).
 - **Live user count** — "N people listening right now" in the hero, via Realtime Database's standard presence pattern (anonymous auth + `onDisconnect()`).
-- **Mix** — a featured section at the top of the "All" browse view, one app per category. Picks each category's top-rated app most of the time, but ~30% of the time (`MIX_DISCOVERY_CHANCE` in `js/app.js`) surfaces a different app from that category instead, so things without ratings yet still get seen; a category with no ratings at all just shuffles. Computed once per page load (not re-shuffled every time something unrelated re-renders the grid) and never surfaces a known-down app.
+- **Mix** — a featured section at the top of the "All" browse view, one app per category. Picks each category's top-ranked app most of the time, but ~30% of the time (`MIX_DISCOVERY_CHANCE` in `js/app.js`) surfaces a different app from that category instead, so things without ratings yet still get seen; a category where every app ties (most commonly because nobody's rated anything there yet) just shuffles among the tied leaders. Computed once per page load (not re-shuffled every time something unrelated re-renders the grid) and never surfaces a known-down app.
+- **Picture-in-Picture** — a pop-out button in the viewer (only shown when the browser supports the [Document Picture-in-Picture API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API) — currently Chromium-based browsers only) moves the live iframe into a small always-on-top floating window, so an app can keep playing while you browse the rest of the site or switch tabs entirely. There's only one iframe to go around, so opening any other app reclaims it and closes the floating window first.
+
+### Ranking (IMDb-style weighted rating)
+
+Plain averages break with small sample sizes — one 5-star rating shouldn't outrank an app with 40 ratings averaging 4.8. Ranking instead uses IMDb's Bayesian weighted-rating formula, in `js/app.js`:
+
+```
+WR = (v ÷ (v + m)) × R  +  (m ÷ (v + m)) × C
+```
+
+where `R` is an app's own average rating, `v` its vote count, `m` a fixed minimum-votes threshold (`IMDB_M = 5`), and `C` the mean rating across every rated app on the site. An app with few votes gets pulled toward the site-wide average `C` instead of swinging on one or two ratings; as `v` grows past `m`, the score converges on the app's real average. Apps with zero ratings all tie exactly at `C`.
+
+This same formula, applied at different levels, drives every ranking decision on the site:
+
+- **Within a category** — each app's own weighted score (`appWeightedScore`) sorts cards inside that category's section.
+- **Across categories** — every rating from every app in a category is pooled into one `R`/`v` before applying the formula (`categoryWeightedScore`), so a category's section order reflects the category as a whole, not just its single best app.
+- **In Mix** — each category's top app by `appWeightedScore` represents it, and categories themselves are ordered by `categoryWeightedScore`, with the discovery chance described above layered on top.
 
 **The site works identically with none of this set up.** `js/firebase-config.js` ships with placeholder values and a full no-op stub (`window.ListenIt`) — every call site in `app.js` calls it unconditionally, so until you configure a real project (or if Firebase ever fails to load), those calls just do nothing and the site runs entirely off `js/apps-data.js` as before.
 

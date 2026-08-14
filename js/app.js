@@ -290,7 +290,7 @@
         <h3 class="card-title">${app.name}</h3>
         <p class="card-tagline">${down ? "Looks unreachable right now — tap to check anyway." : app.tagline}</p>
         <div class="card-footer">
-          <span class="card-domain">${app.domain}${rCount > 0 ? ` · ⭐ ${avgRating(app.id).toFixed(1)}` : ""}${plays > 0 ? ` · 🔥 ${plays}` : ""}</span>
+          <span class="card-domain">${app.domain}${rCount > 0 ? ` · ⭐ ${avgRating(app.id).toFixed(1)} (${rCount})` : ""}${plays > 0 ? ` · 🔥 ${plays}` : ""}</span>
           <span class="card-open">${down ? "Check ▸" : "Play ▸"}</span>
         </div>
       </div>
@@ -341,18 +341,18 @@
     }).sort((a, b) => {
       const downDiff = Number(isAppUp(a.id) === false) - Number(isAppUp(b.id) === false);
       if (downDiff !== 0) return downDiff; // down apps sink to the end
-      const ratingDiff = avgRating(b.id) - avgRating(a.id); // higher-rated apps float up (0 for unrated)
+      const ratingDiff = appWeightedScore(b.id) - appWeightedScore(a.id); // IMDb-weighted; unrated apps all tie at the site mean
       if (ratingDiff !== 0) return ratingDiff;
       return (TRENDING[b.id] || 0) - (TRENDING[a.id] || 0); // tiebreak: most-played first; stable (0-0 ties keep original order)
     });
   }
 
-  // Order + icon for each category's section when browsing "All" — similar
-  // apps (auto/bus/truck etc.) land in the same section instead of one
-  // undifferentiated wall of cards. Unrecognized categories (e.g. a new one
-  // introduced via Firestore, see loadFirebaseApps) just get appended after
-  // these with a generic icon, nothing breaks.
-  const CATEGORY_ORDER = ["Transit & Travel", "Shops & Street Corners", "Work & Trade", "Festival & Occasions", "Regional & Folk", "Ambient Radio", "Beyond India"];
+  // Icon per category section when browsing "All" — similar apps
+  // (auto/bus/truck etc.) land in the same section instead of one
+  // undifferentiated wall of cards. Section (and Mix) ORDER is dynamic —
+  // see categoryWeightedScore below, not a fixed list here. An
+  // unrecognized category (e.g. a new one introduced via Firestore, see
+  // loadFirebaseApps) just gets a generic icon, nothing breaks.
   const CATEGORY_ICONS = {
     "Transit & Travel": "🚌",
     "Shops & Street Corners": "💈",
@@ -381,27 +381,34 @@
       byCategory.get(app.category).push(app);
     });
 
-    const orderedCats = [
-      ...CATEGORY_ORDER.filter((c) => byCategory.has(c)),
-      ...[...byCategory.keys()].filter((c) => !CATEGORY_ORDER.includes(c))
-    ];
+    // Categories ranked by their pooled weighted score too — the best
+    // corners of the site lead Mix, not just an arbitrary fixed order.
+    const orderedCats = [...byCategory.keys()].sort(
+      (a, b) => categoryWeightedScore(b) - categoryWeightedScore(a)
+    );
 
     return orderedCats.map((cat) => {
       const pool = byCategory.get(cat);
-      const rated = pool
-        .filter((a) => ratingCount(a.id) > 0)
-        .sort((a, b) =>
-          avgRating(b.id) - avgRating(a.id) ||
-          ratingCount(b.id) - ratingCount(a.id) ||
-          (TRENDING[b.id] || 0) - (TRENDING[a.id] || 0)
-        );
 
-      if (rated.length === 0) {
-        return pool[Math.floor(Math.random() * pool.length)]; // no ratings here yet — shuffle
-      }
-      const winner = rated[0];
-      if (pool.length > 1 && Math.random() < MIX_DISCOVERY_CHANCE) {
-        const alternates = pool.filter((a) => a.id !== winner.id);
+      // Top-ranked app(s) in the category by weighted score. A tie —
+      // most commonly because nobody here has been rated yet, so every
+      // app sits at the same site-wide mean — resolves to a random pick
+      // among the tied leaders. That's the "shuffle when there's no
+      // winner" case; it falls straight out of the formula instead of
+      // needing its own branch.
+      let best = -Infinity;
+      let leaders = [];
+      pool.forEach((a) => {
+        const score = appWeightedScore(a.id);
+        if (score > best) { best = score; leaders = [a]; }
+        else if (score === best) leaders.push(a);
+      });
+      const winner = leaders[Math.floor(Math.random() * leaders.length)];
+
+      // Discovery: only meaningful when there IS a clear winner to deviate
+      // from (if everyone's tied, this is already a full shuffle).
+      if (pool.length > leaders.length && Math.random() < MIX_DISCOVERY_CHANCE) {
+        const alternates = pool.filter((a) => !leaders.includes(a));
         return alternates[Math.floor(Math.random() * alternates.length)];
       }
       return winner;
@@ -447,10 +454,15 @@
       if (!byCategory.has(app.category)) byCategory.set(app.category, []);
       byCategory.get(app.category).push(app);
     });
-    const orderedCats = [
-      ...CATEGORY_ORDER.filter((c) => byCategory.has(c)),
-      ...[...byCategory.keys()].filter((c) => !CATEGORY_ORDER.includes(c))
-    ];
+    // Sections ordered by each category's pooled weighted rating — every
+    // app in it counted together — so the best-rated corners of the site
+    // lead, not a fixed hand-picked order. (Chips keep a stable order —
+    // see renderChips — since those are a navigation aid people build
+    // muscle memory for; reshuffling them by rating would just be
+    // confusing.)
+    const orderedCats = [...byCategory.keys()].sort(
+      (a, b) => categoryWeightedScore(b) - categoryWeightedScore(a)
+    );
     orderedCats.forEach((cat) => {
       const section = document.createElement("section");
       section.className = "category-section";
@@ -496,8 +508,12 @@
   const viewerOpenTab = document.getElementById("viewerOpenTab");
   const viewerFav = document.getElementById("viewerFav");
   const viewerShare = document.getElementById("viewerShare");
+  const viewerPip = document.getElementById("viewerPip");
+  const viewerBody = document.querySelector(".viewer-body");
   let slowTimer = null;
   let currentApp = null;
+  let pipWindow = null;
+  const pipSupported = "documentPictureInPicture" in window;
 
   function hideAllViewerPanels() {
     viewerLoading.classList.add("hidden");
@@ -507,9 +523,54 @@
     clearTimeout(slowTimer);
   }
 
+  /* ---------------- Picture-in-Picture ----------------
+   * Document Picture-in-Picture (Chrome/Edge 116+ only — the button stays
+   * hidden everywhere else via pipSupported) pops the live iframe out into
+   * a small always-on-top window so an app can keep playing while you
+   * browse the rest of the site. There's only one iframe element to go
+   * around, so opening any app while a PiP window is open closes it first
+   * (moves the iframe back) rather than trying to juggle two.
+   */
+  function exitPip() {
+    if (!pipWindow) return;
+    const win = pipWindow;
+    pipWindow = null;
+    viewerFrame.style.width = "";
+    viewerFrame.style.height = "";
+    viewerBody.appendChild(viewerFrame);
+    viewerPip.classList.remove("active");
+    if (!win.closed) win.close();
+  }
+
+  if (pipSupported) {
+    viewerPip.addEventListener("click", async () => {
+      if (!currentApp) return;
+      if (pipWindow) { exitPip(); return; } // acts as a toggle
+      try {
+        const win = await documentPictureInPicture.requestWindow({ width: 420, height: 320 });
+        pipWindow = win;
+        const style = win.document.createElement("style");
+        style.textContent = "html,body{margin:0;height:100%;background:#000;overflow:hidden;}";
+        win.document.head.appendChild(style);
+        viewerFrame.style.width = "100%";
+        viewerFrame.style.height = "100%";
+        win.document.body.appendChild(viewerFrame);
+        viewerPip.classList.add("active");
+        win.addEventListener("pagehide", () => exitPip(), { once: true });
+        LI.trackEvent("pip_open", { app_id: currentApp.id });
+        // The content now lives in the PiP window — the main overlay has
+        // nothing left to show, so close it without touching viewerFrame.
+        closeViewer(true, { keepPip: true });
+      } catch (e) {
+        console.warn("[ListenIt] Picture-in-Picture failed", e);
+      }
+    });
+  }
+
   function openViewer(id, pushState = true) {
     const app = getApp(id);
     if (!app) return;
+    exitPip(); // only one iframe — opening any app reclaims it from PiP first
     currentApp = app;
 
     LI.trackEvent("open_app", { app_id: app.id, app_name: app.name });
@@ -532,6 +593,8 @@
     hideAllViewerPanels();
     viewerFrame.src = "about:blank";
     viewerFrame.classList.add("hidden");
+    // Nothing to pop out until an iframe actually starts loading below.
+    if (pipSupported) viewerPip.classList.add("hidden");
 
     // Known-down (per the last health check) — don't even try to load it,
     // just offer another pick straight away instead of a stuck spinner.
@@ -553,6 +616,7 @@
     viewerFrame.classList.remove("hidden");
     viewerLoading.classList.remove("hidden");
     viewerSlowLink.href = app.url;
+    if (pipSupported) viewerPip.classList.remove("hidden");
 
     viewerFrame.src = app.url;
     clearTimeout(slowTimer);
@@ -579,10 +643,12 @@
     if (currentApp) LI.trackEvent("open_in_new_tab", { app_id: currentApp.id });
   });
 
-  function closeViewer(pushState = true) {
+  function closeViewer(pushState = true, opts = {}) {
     viewer.classList.add("hidden");
     unlockBodyScroll();
-    viewerFrame.src = "about:blank";
+    // When handing off to a PiP window, viewerFrame has just been moved
+    // there — leave its src alone so the popped-out app keeps playing.
+    if (!opts.keepPip) viewerFrame.src = "about:blank";
     clearTimeout(slowTimer);
     document.getElementById("viewerReactions").classList.add("hidden");
     document.getElementById("viewerRating").classList.add("hidden");
@@ -680,11 +746,63 @@
   function ratingCount(id) {
     return (RATINGS[id] && RATINGS[id].count) || 0;
   }
+
+  /* ---------------- IMDb-style weighted ranking ----------------
+   * Plain averages let a single 5-star rating outrank an app with 50
+   * ratings averaging 4.5 — not what "prioritize by rating" should mean.
+   * IMDb's classic fix (a Bayesian average against the site-wide mean):
+   *   WR = (v / (v+m)) * R + (m / (v+m)) * C
+   * R = the item's own average, v = its vote count, C = the mean rating
+   * across the WHOLE site (the "prior" a low-vote item gets pulled toward),
+   * m = how many votes it takes before an item's own average starts to
+   * dominate C. IMDb uses a huge m (~25,000) at their scale; this is a
+   * small hobby directory where ratings will be sparse, so a small m makes
+   * an app's own rating matter fast while still damping single-vote flukes.
+   *
+   * Used at three levels, per the brief:
+   *  - appWeightedScore(id): that app's own sum/count only — ranks apps
+   *    within a category, and picks a category's Mix winner.
+   *  - categoryWeightedScore(cat): every app in the category pooled into
+   *    one sum/count — ranks which category SECTION shows first in "All".
+   * Both share the same GLOBAL_RATING_MEAN (C) and IMDB_M — C is just "the
+   * site's overall baseline", the same prior regardless of what's being
+   * scored.
+   */
+  const IMDB_M = 5;
+  let GLOBAL_RATING_MEAN = 0; // C — recomputed whenever RATINGS changes
+  function computeGlobalRatingMean() {
+    let totalSum = 0, totalCount = 0;
+    Object.values(RATINGS).forEach((r) => {
+      totalSum += r.sum || 0;
+      totalCount += r.count || 0;
+    });
+    return totalCount > 0 ? totalSum / totalCount : 0;
+  }
+  function weightedRating(sum, count) {
+    if (count === 0) return GLOBAL_RATING_MEAN;
+    const R = sum / count;
+    return (count / (count + IMDB_M)) * R + (IMDB_M / (count + IMDB_M)) * GLOBAL_RATING_MEAN;
+  }
+  function appWeightedScore(id) {
+    const r = RATINGS[id];
+    return weightedRating(r ? r.sum || 0 : 0, r ? r.count || 0 : 0);
+  }
+  function categoryWeightedScore(category) {
+    let sum = 0, count = 0;
+    appsList.forEach((a) => {
+      if (a.category !== category) return;
+      const r = RATINGS[a.id];
+      if (r) { sum += r.sum || 0; count += r.count || 0; }
+    });
+    return weightedRating(sum, count);
+  }
+
   function loadRatings() {
     LI.getAllRatings()
       .then((data) => {
         if (data && Object.keys(data).length) {
           RATINGS = data;
+          GLOBAL_RATING_MEAN = computeGlobalRatingMean();
           invalidateMix();
           renderGrid();
         }
@@ -742,6 +860,7 @@
       // rather than waiting on a full refetch of the ratings collection.
       const prev = RATINGS[currentApp.id] || { sum: 0, count: 0 };
       RATINGS[currentApp.id] = { sum: prev.sum + stars, count: prev.count + 1 };
+      GLOBAL_RATING_MEAN = computeGlobalRatingMean();
       LI.rate(currentApp.id, stars);
       LI.trackEvent("rate", { app_id: currentApp.id, stars });
     });
