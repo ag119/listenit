@@ -509,11 +509,60 @@
   const viewerFav = document.getElementById("viewerFav");
   const viewerShare = document.getElementById("viewerShare");
   const viewerPip = document.getElementById("viewerPip");
+  const viewerWakeLock = document.getElementById("viewerWakeLock");
   const viewerBody = document.querySelector(".viewer-body");
   let slowTimer = null;
   let currentApp = null;
   let pipWindow = null;
   const pipSupported = "documentPictureInPicture" in window;
+
+  /* ---------------- Keep screen awake (Wake Lock) ----------------
+   * The audio plays inside a cross-origin iframe — the embedded app's own
+   * page — which this page has zero DOM access to. That means we can't
+   * register the Media Session API on its behalf, so mobile browsers
+   * suspend it like any backgrounded iframe once the phone auto-locks;
+   * there's no API for a parent page to grant a cross-origin iframe
+   * "survive device lock" powers (for good reason — think what a random
+   * ad iframe could do with that).
+   *
+   * The real mitigation: hold a Wake Lock while the viewer's open so the
+   * phone never auto-locks from inactivity in the first place — the page
+   * simply never backgrounds. Tradeoff is real (screen stays lit, more
+   * battery), so it's an opt-in toggle, not a forced default — and
+   * whatever the visitor last chose sticks for next time.
+   */
+  const wakeLockSupported = "wakeLock" in navigator;
+  let wakeLockSentinel = null;
+  let wakeLockWanted = wakeLockSupported && localStorage.getItem("listenit_wake_lock") === "1";
+  async function acquireWakeLock() {
+    if (!wakeLockSupported || !wakeLockWanted || wakeLockSentinel) return;
+    try {
+      wakeLockSentinel = await navigator.wakeLock.request("screen");
+      wakeLockSentinel.addEventListener("release", () => { wakeLockSentinel = null; });
+    } catch (e) {
+      // Denied, unsupported in this context (e.g. backgrounded tab), etc. — no-op.
+    }
+  }
+  function releaseWakeLock() {
+    if (wakeLockSentinel) { wakeLockSentinel.release().catch(() => {}); wakeLockSentinel = null; }
+  }
+  if (wakeLockSupported) {
+    viewerWakeLock.classList.remove("hidden");
+    viewerWakeLock.classList.toggle("active", wakeLockWanted);
+    viewerWakeLock.addEventListener("click", () => {
+      wakeLockWanted = !wakeLockWanted;
+      localStorage.setItem("listenit_wake_lock", wakeLockWanted ? "1" : "0");
+      viewerWakeLock.classList.toggle("active", wakeLockWanted);
+      if (wakeLockWanted) { acquireWakeLock(); LI.trackEvent("wake_lock_on", {}); }
+      else { releaseWakeLock(); LI.trackEvent("wake_lock_off", {}); }
+    });
+    // A wake lock is auto-released whenever the tab is hidden (spec
+    // behavior) — re-request it once the visitor comes back if they still
+    // want it, otherwise it'd silently stop working after any app-switch.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && !viewer.classList.contains("hidden")) acquireWakeLock();
+    });
+  }
 
   function hideAllViewerPanels() {
     viewerLoading.classList.add("hidden");
@@ -585,6 +634,7 @@
 
     viewer.classList.remove("hidden");
     lockBodyScroll();
+    acquireWakeLock(); // no-op unless the visitor previously opted in
 
     if (pushState) {
       history.pushState({ listenitApp: app.id }, "", "?app=" + app.id);
@@ -646,6 +696,7 @@
   function closeViewer(pushState = true, opts = {}) {
     viewer.classList.add("hidden");
     unlockBodyScroll();
+    releaseWakeLock(); // nothing left in the main viewer to protect from auto-lock
     // When handing off to a PiP window, viewerFrame has just been moved
     // there — leave its src alone so the popped-out app keeps playing.
     if (!opts.keepPip) viewerFrame.src = "about:blank";

@@ -527,6 +527,8 @@ button { font: inherit; }
 #viewerPip.active rect:last-child { fill: currentColor; }
 #viewerChat.active { color: var(--accent-2); }
 #viewerChat { position: relative; }
+#viewerWakeLock.active { color: var(--accent-2); }
+#viewerWakeLock.active path { fill: color-mix(in srgb, var(--accent-2) 25%, transparent); }
 .chat-unread-dot {
   display: none;
   position: absolute;
