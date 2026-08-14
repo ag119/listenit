@@ -1,4 +1,4 @@
-const CACHE_NAME = "listenit-v6";
+const CACHE_NAME = "listenit-v7";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -13,11 +13,23 @@ const APP_SHELL = [
   "/icons/icon-512.png",
   "/icons/og-cover.jpg",
   "/thumbnails/corporatesucks.jpg",
+  "/thumbnails/nostalgia-cassette.jpg",
   "/thumbnails/deluxesalon.jpg",
-  "/thumbnails/hornokplease.jpg",
+  "/thumbnails/chai-tapri.jpg",
+  "/thumbnails/pan-wala.jpg",
+  "/thumbnails/thenisai-saloon.jpg",
   "/thumbnails/busdriver.jpg",
   "/thumbnails/rickshaw-wala.jpg",
+  "/thumbnails/rickshaw-radio.jpg",
+  "/thumbnails/truckplaylist.jpg",
+  "/thumbnails/safar.jpg",
   "/thumbnails/mehfil.jpg",
+  "/thumbnails/kudimagan.jpg",
+  "/thumbnails/garba-navratri.jpg",
+  "/thumbnails/rajasthani-folk.jpg",
+  "/thumbnails/bangla-bangers.jpg",
+  "/thumbnails/places-have-sound.jpg",
+  "/thumbnails/kassita.jpg",
   "/thumbnails/placeholder.jpg"
 ];
 

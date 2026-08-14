@@ -1,41 +1,113 @@
 {
-  "generatedAt": "2026-08-14T05:25:00.905Z",
+  "generatedAt": "2026-08-14T06:07:18.061Z",
   "apps": {
     "corporatesucks": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T05:24:59.732Z"
+      "checkedAt": "2026-08-14T06:07:14.974Z"
+    },
+    "nostalgia-cassette": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.002Z"
     },
     "deluxesalon": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T05:24:59.791Z"
+      "checkedAt": "2026-08-14T06:07:15.003Z"
     },
-    "hornokplease": {
-      "up": false,
-      "statusCode": 402,
+    "chai-tapri": {
+      "up": true,
+      "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T05:24:59.793Z"
+      "checkedAt": "2026-08-14T06:07:15.005Z"
+    },
+    "pan-wala": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.005Z"
+    },
+    "thenisai-saloon": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.006Z"
     },
     "busdriver": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T05:24:59.795Z"
+      "checkedAt": "2026-08-14T06:07:15.007Z"
     },
     "rickshaw-wala": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T05:24:59.796Z"
+      "checkedAt": "2026-08-14T06:07:15.007Z"
+    },
+    "rickshaw-radio": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.008Z"
+    },
+    "truckplaylist": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.009Z"
+    },
+    "safar": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.009Z"
     },
     "mehfil": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-14T05:24:59.797Z"
+      "checkedAt": "2026-08-14T06:07:15.010Z"
+    },
+    "kudimagan": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.010Z"
+    },
+    "garba-navratri": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.011Z"
+    },
+    "rajasthani-folk": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.011Z"
+    },
+    "bangla-bangers": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.011Z"
+    },
+    "places-have-sound": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.012Z"
+    },
+    "kassita": {
+      "up": true,
+      "statusCode": 200,
+      "error": null,
+      "checkedAt": "2026-08-14T06:07:15.012Z"
     }
   }
 }

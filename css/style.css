@@ -219,6 +219,18 @@ button { font: inherit; }
 
 /* ===== Grid ===== */
 .grid-section { max-width: 1100px; margin: 0 auto; padding: 36px 20px 10px; }
+.grid-sections { display: flex; flex-direction: column; gap: 44px; }
+.category-section:first-child { margin-top: 0; }
+.category-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 18px;
+}
+.category-heading span { font-size: 22px; }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -576,4 +588,28 @@ button { font: inherit; }
   .hero { padding: 40px 16px 24px; }
   .hero-controls { flex-direction: column; }
   .submit-cta-inner { flex-direction: column; align-items: flex-start; }
+
+  /* Two compact columns instead of one wide column — with 18 apps across
+     5 sections, single wide cards meant endless scrolling to see anything. */
+  .grid-sections { gap: 30px; }
+  .category-heading { font-size: 16px; margin-bottom: 12px; }
+  .category-heading span { font-size: 18px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .card-body { padding: 9px 9px 11px; gap: 3px; }
+  .card-title { font-size: 12.5px; line-height: 1.25; }
+  .card-tagline {
+    font-size: 10.5px;
+    line-height: 1.32;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-footer { margin-top: 6px; }
+  .card-domain { font-size: 9px; }
+  .card-open { font-size: 10px; }
+  .card-fav { width: 26px; height: 26px; top: 6px; right: 6px; }
+  .card-fav svg { width: 13px; height: 13px; }
+  .card-cat { font-size: 8.5px; padding: 3px 7px; left: 6px; bottom: 6px; }
+  .card-down-badge { font-size: 8.5px; padding: 3px 7px; right: 6px; bottom: 6px; }
 }

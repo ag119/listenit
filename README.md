@@ -29,7 +29,10 @@ Edit [`js/apps-data.js`](js/apps-data.js) — it's a plain array, one object per
   url: "https://example.com",
   domain: "example.com",
   tagline: "One short line about it.",
-  category: "Ambient Radio",       // groups apps into filter chips
+  category: "Ambient Radio",       // groups apps into filter chips AND the section
+                                    // headers shown when browsing "All" — reuse an
+                                    // existing category string to land in that
+                                    // section, see CATEGORY_ORDER in js/app.js
   thumbnail: "thumbnails/example.jpg",  // fallback image, see below
   embeddable: true,                // set false if the site blocks iframes
                                     // (sends X-Frame-Options / CSP frame-ancestors) —
@@ -64,7 +67,7 @@ To change the WhatsApp number, edit `WHATSAPP_NUMBER` near the top of [`js/app.j
 
 ## Automatic down-app handling
 
-Some listed sites go down (a Vercel deployment gets disabled, DNS lapses, etc.) — `hornokplease.xyz` was returning HTTP 402 "deployment disabled" at the time this was built. The browser can't reliably detect that on its own: most of these sites don't send CORS headers, so a client-side `fetch()` can't tell "reachable but broken" from "actually fine" — it can only see network-level failures.
+Some listed sites go down (a Vercel deployment gets disabled, DNS lapses, etc.) — `hornokplease.xyz` returned HTTP 402 "deployment disabled" for a while after this was first built, which is why it was later removed from the list entirely. The browser can't reliably detect that kind of thing on its own: most of these sites don't send CORS headers, so a client-side `fetch()` can't tell "reachable but broken" from "actually fine" — it can only see network-level failures.
 
 So a GitHub Actions workflow ([`.github/workflows/healthcheck.yml`](.github/workflows/healthcheck.yml)) curls every app server-side every 30 minutes (`scripts/healthcheck.mjs`) and commits the result to [`status.json`](status.json). This covers both the static list in `js/apps-data.js` and anything added via Firestore (see "Adding an app without redeploying") — the latter needs one optional extra step, see "Covering Firebase-added apps in the health check" below. The site fetches `status.json` at load and:
 
@@ -144,7 +147,7 @@ node scripts/add-app.mjs '{
   "url": "https://example.com",
   "domain": "example.com",
   "tagline": "One short line about it.",
-  "category": "Desi Nostalgia"
+  "category": "Transit & Travel"
 }'
 ```
 

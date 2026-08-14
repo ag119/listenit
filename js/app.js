@@ -245,6 +245,23 @@
       .catch(() => { imgEl.src = fallback; });
   }
 
+  // Only fetch a live screenshot once a card actually scrolls near the
+  // viewport, instead of firing one thum.io request per card the moment the
+  // grid renders. With a handful of apps that burst was harmless; with 18+
+  // it was enough simultaneous requests to trip thum.io's rate limit on
+  // every single page load (a valid-but-tiny "pay for an account" image —
+  // see MIN_LIVE_THUMB_BYTES above — for cards that lost the race).
+  const thumbObserver = "IntersectionObserver" in window
+    ? new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const data = entry.target._thumbLoad;
+          obs.unobserve(entry.target);
+          if (data) loadLiveThumb(data.imgEl, data.app, data.fallback);
+        });
+      }, { rootMargin: "400px 0px" })
+    : null;
+
   function cardTemplate(app) {
     const fav = isFavorite(app.id);
     const down = !isAppUp(app.id);
@@ -294,9 +311,16 @@
     });
 
     // Card paints immediately with the local fallback image, then upgrades
-    // to a live screenshot. Skipped for down apps (see liveThumbUrl above).
+    // to a live screenshot once it's actually near the viewport (see
+    // thumbObserver above). Skipped entirely for down apps.
     if (!down) {
-      loadLiveThumb(card.querySelector(".card-thumb"), app, fallbackThumb);
+      const imgEl = card.querySelector(".card-thumb");
+      if (thumbObserver) {
+        card._thumbLoad = { imgEl, app, fallback: fallbackThumb };
+        thumbObserver.observe(card);
+      } else {
+        loadLiveThumb(imgEl, app, fallbackThumb);
+      }
     }
 
     return card;
@@ -318,11 +342,56 @@
     });
   }
 
+  // Order + icon for each category's section when browsing "All" — similar
+  // apps (auto/bus/truck etc.) land in the same section instead of one
+  // undifferentiated wall of cards. Unrecognized categories (e.g. a new one
+  // introduced via Firestore, see loadFirebaseApps) just get appended after
+  // these with a generic icon, nothing breaks.
+  const CATEGORY_ORDER = ["Transit & Travel", "Shops & Street Corners", "Regional & Folk", "Ambient Radio", "Beyond India"];
+  const CATEGORY_ICONS = {
+    "Transit & Travel": "🚌",
+    "Shops & Street Corners": "💈",
+    "Regional & Folk": "🪕",
+    "Ambient Radio": "🎧",
+    "Beyond India": "🌍"
+  };
+
   function renderGrid() {
     const apps = filteredApps();
     gridEl.innerHTML = "";
-    apps.forEach((app) => gridEl.appendChild(cardTemplate(app)));
     emptyState.classList.toggle("hidden", apps.length > 0);
+    if (apps.length === 0) return;
+
+    // Only group into sections for the unfiltered "All" browse view — a
+    // specific category chip, Favorites, or a search are already a single
+    // focused list, sections would just add noise there.
+    if (activeCategory !== "All" || searchTerm) {
+      const flat = document.createElement("div");
+      flat.className = "grid";
+      apps.forEach((app) => flat.appendChild(cardTemplate(app)));
+      gridEl.appendChild(flat);
+      return;
+    }
+
+    const byCategory = new Map();
+    apps.forEach((app) => {
+      if (!byCategory.has(app.category)) byCategory.set(app.category, []);
+      byCategory.get(app.category).push(app);
+    });
+    const orderedCats = [
+      ...CATEGORY_ORDER.filter((c) => byCategory.has(c)),
+      ...[...byCategory.keys()].filter((c) => !CATEGORY_ORDER.includes(c))
+    ];
+    orderedCats.forEach((cat) => {
+      const section = document.createElement("section");
+      section.className = "category-section";
+      section.innerHTML = `<h2 class="category-heading"><span aria-hidden="true">${CATEGORY_ICONS[cat] || "📻"}</span>${cat}</h2>`;
+      const grid = document.createElement("div");
+      grid.className = "grid";
+      byCategory.get(cat).forEach((app) => grid.appendChild(cardTemplate(app)));
+      section.appendChild(grid);
+      gridEl.appendChild(section);
+    });
   }
 
   const searchInputEl = document.getElementById("searchInput");
