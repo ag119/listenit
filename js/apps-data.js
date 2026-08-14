@@ -31,6 +31,50 @@ const APPS = [
     embeddable: true,
     addedAt: "2026-08-14"
   },
+  {
+    id: "royal-fitness",
+    name: "Royal Fitness",
+    url: "https://royalfitness.online",
+    domain: "royalfitness.online",
+    tagline: "Classic 90s Bollywood songs to lift to — old Hindi hits, gym-floor loud.",
+    category: "Ambient Radio",
+    thumbnail: "thumbnails/royal-fitness.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "bakwas-band-kar",
+    name: "Bakwas Band Kar",
+    url: "https://bakwasbandkar.vercel.app",
+    domain: "bakwasbandkar.vercel.app",
+    tagline: "494 Bollywood songs from 2007-2016, in a room that looks like the one you watched them in.",
+    category: "Ambient Radio",
+    thumbnail: "thumbnails/bakwas-band-kar.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "rs-world-90s",
+    name: "R's World",
+    url: "https://90s-night.vercel.app",
+    domain: "90s-night.vercel.app",
+    tagline: "A 90s Bollywood video-cassette shop — pick a voice, the shop plays it.",
+    category: "Ambient Radio",
+    thumbnail: "thumbnails/rs-world-90s.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "theka",
+    name: "Talli",
+    url: "https://theka.wtf",
+    domain: "theka.wtf",
+    tagline: "Nashe wale gaane, back to back — everything at once, the way the night actually goes.",
+    category: "Ambient Radio",
+    thumbnail: "thumbnails/theka.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
 
   /* ---------------- Shops & Street Corners ---------------- */
   {
@@ -74,6 +118,39 @@ const APPS = [
     tagline: "Old Tamil melodies for a quiet Chennai evening.",
     category: "Shops & Street Corners",
     thumbnail: "thumbnails/thenisai-saloon.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "yaaron-ki-mehfil",
+    name: "Yaaron Ki Mehfil",
+    url: "https://yaaron-ki-mehfil.vercel.app",
+    domain: "yaaron-ki-mehfil.vercel.app",
+    tagline: "A nostalgic evening for friends — dosti anthems, chai charcha, unforgettable memories.",
+    category: "Shops & Street Corners",
+    thumbnail: "thumbnails/yaaron-ki-mehfil.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "tapri-fm",
+    name: "Tapri FM",
+    url: "https://taprichai.merakida.com",
+    domain: "taprichai.merakida.com",
+    tagline: "Hindi Bollywood playlists by mood — saloon, truck driver, Irani cafe, paan shop, road trip.",
+    category: "Shops & Street Corners",
+    thumbnail: "thumbnails/tapri-fm.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "cyber-cafe-2000s",
+    name: "2000s Cyber Cafe",
+    url: "https://2000s-indian-cyber-cafe.ai.studio",
+    domain: "2000s-indian-cyber-cafe.ai.studio",
+    tagline: "Dial-up nostalgia and adda — a 2000s Indian cyber cafe, reopened.",
+    category: "Shops & Street Corners",
+    thumbnail: "thumbnails/cyber-cafe-2000s.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
   },
@@ -134,6 +211,83 @@ const APPS = [
     embeddable: true,
     addedAt: "2026-08-14"
   },
+  {
+    id: "indian-truck-bangers",
+    name: "Indian Roadways",
+    url: "https://www.indiantruckbangers.fun",
+    domain: "indiantruckbangers.fun",
+    tagline: "Truckstop bangers, blessings, and long roads.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/indian-truck-bangers.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "up-roadways",
+    name: "UP Roadways",
+    url: "https://uproadways.fun",
+    domain: "uproadways.fun",
+    tagline: "The bus driver's playlist, UP Roadways-style.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/up-roadways.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "malwa-express",
+    name: "Malwa Express",
+    url: "https://malwa-express.vercel.app",
+    domain: "malwa-express.vercel.app",
+    tagline: "Board the bus — Malwa Express, straight through central Madhya Pradesh.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/malwa-express.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "auto-waala",
+    name: "Auto Waala",
+    url: "https://auto-waala-beta.vercel.app",
+    domain: "auto-waala-beta.vercel.app",
+    tagline: "Meter se chalenge, gaane dil se bajenge.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/auto-waala.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "rikshawalo",
+    name: "Rikshawalo",
+    url: "https://rikshawalo.netlify.app",
+    domain: "rikshawalo.netlify.app",
+    tagline: "Gujarati & Hindi songs, straight off the rickshaw stereo.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/rikshawalo.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "hyd-auto",
+    name: "HYD Auto",
+    url: "https://hyd-auto.vercel.app",
+    domain: "hyd-auto.vercel.app",
+    tagline: "Gaane that only slap in a Hyderabad auto. Sit in the back seat and ride.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/hyd-auto.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "autowala-lucknow",
+    name: "Auto Wale Ki Playlist",
+    url: "https://autowala-playlist.netlify.app",
+    domain: "autowala-playlist.netlify.app",
+    tagline: "Ek auto, ek Vikram, Lucknow ki poori sadak — aur bhaiya ka speaker full volume par.",
+    category: "Transit & Travel",
+    thumbnail: "thumbnails/autowala-lucknow.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
 
   /* ---------------- Regional & Folk ---------------- */
   {
@@ -191,6 +345,17 @@ const APPS = [
     embeddable: true,
     addedAt: "2026-08-14"
   },
+  {
+    id: "ekant-raag",
+    name: "Ekant Raag",
+    url: "https://ekant-raag-radio.onrender.com",
+    domain: "ekant-raag-radio.onrender.com",
+    tagline: "Solitude and raga — a quiet corner of classical Hindustani music.",
+    category: "Regional & Folk",
+    thumbnail: "thumbnails/ekant-raag.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
 
   /* ---------------- Beyond India ---------------- */
   {
@@ -212,6 +377,87 @@ const APPS = [
     tagline: "Moroccan classics from the cassette era — music that made ordinary moments feel special.",
     category: "Beyond India",
     thumbnail: "thumbnails/kassita.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+
+  /* ---------------- Work & Trade ---------------- */
+  {
+    id: "master-jiii",
+    name: "Master Jiii",
+    url: "https://master-jiii.vercel.app",
+    domain: "master-jiii.vercel.app",
+    tagline: "Naap se nazakat tak — old Hindi songs from the tailor shop.",
+    category: "Work & Trade",
+    thumbnail: "thumbnails/master-jiii.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "munna-mistri",
+    name: "Munna Mistri",
+    url: "https://munnamistri.in",
+    domain: "munnamistri.in",
+    tagline: "90s Bollywood playing all day, just like the songs you'd hear while Munna worked on the wall next door.",
+    category: "Work & Trade",
+    thumbnail: "thumbnails/munna-mistri.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "mazdoor-club",
+    name: "Mazdur Club",
+    url: "https://majdoorclub.pages.dev",
+    domain: "majdoorclub.pages.dev",
+    tagline: "Purani gaane, saara din, sab ke saath.",
+    category: "Work & Trade",
+    thumbnail: "thumbnails/mazdoor-club.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "dhobi-ghat",
+    name: "Dhobi Ghat",
+    url: "https://dhobighat.easyspin.co.in",
+    domain: "dhobighat.easyspin.co.in",
+    tagline: "Purane gaane aur transistor ki dhun, straight from the washing ghat.",
+    category: "Work & Trade",
+    thumbnail: "thumbnails/dhobi-ghat.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+
+  /* ---------------- Festival & Occasions ---------------- */
+  {
+    id: "chhath-vibes",
+    name: "Chhath Vibes",
+    url: "https://chhathvibes.in",
+    domain: "chhathvibes.in",
+    tagline: "Classic Chhath Puja bangers on repeat — full cultural vibes.",
+    category: "Festival & Occasions",
+    thumbnail: "thumbnails/chhath-vibes.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "ganpati-utsav",
+    name: "Ganpati Utsav",
+    url: "https://bappa-morya-re.vercel.app",
+    domain: "bappa-morya-re.vercel.app",
+    tagline: "Ambient devotional music and rotations for Bappa's homecoming.",
+    category: "Festival & Occasions",
+    thumbnail: "thumbnails/ganpati-utsav.jpg",
+    embeddable: true,
+    addedAt: "2026-08-14"
+  },
+  {
+    id: "azaadi",
+    name: "Azaadi",
+    url: "https://azaadi.xyz",
+    domain: "azaadi.xyz",
+    tagline: "Kuch gaane, kuch yaadein, aur ek azaad Hindustan.",
+    category: "Festival & Occasions",
+    thumbnail: "thumbnails/azaadi.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
   }

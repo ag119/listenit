@@ -347,10 +347,12 @@
   // undifferentiated wall of cards. Unrecognized categories (e.g. a new one
   // introduced via Firestore, see loadFirebaseApps) just get appended after
   // these with a generic icon, nothing breaks.
-  const CATEGORY_ORDER = ["Transit & Travel", "Shops & Street Corners", "Regional & Folk", "Ambient Radio", "Beyond India"];
+  const CATEGORY_ORDER = ["Transit & Travel", "Shops & Street Corners", "Work & Trade", "Festival & Occasions", "Regional & Folk", "Ambient Radio", "Beyond India"];
   const CATEGORY_ICONS = {
     "Transit & Travel": "🚌",
     "Shops & Street Corners": "💈",
+    "Work & Trade": "🧵",
+    "Festival & Occasions": "🪔",
     "Regional & Folk": "🪕",
     "Ambient Radio": "🎧",
     "Beyond India": "🌍"

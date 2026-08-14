@@ -153,6 +153,12 @@ node scripts/add-app.mjs '{
 
 Either way, `firestore.rules` keeps the `apps` collection **read-only from the client** — only you, using `serviceAccountKey.json`-backed admin access (Console or the script), can add or change what's listed. A Firestore doc's `id` matching one already in `js/apps-data.js` overrides that entry (name/tagline/category/etc.) without touching code, in case you'd rather edit an existing listing this way too.
 
+**C. Bulk sync** — mirror the entire static list into Firestore in one shot (e.g. right after setting Firebase up for the first time, or after a big batch of additions to `js/apps-data.js`):
+```bash
+node scripts/sync-apps.mjs
+```
+Upserts every app in `js/apps-data.js` into Firestore (and seeds their `appStats`/`reactions` docs) — safe to re-run any time. It doesn't delete Firestore docs for apps you've since removed from the static file; do that by hand in the Console if you want an exact mirror.
+
 ### Covering Firebase-added apps in the health check
 
 `scripts/healthcheck.mjs` (see "Automatic down-app handling" above) always checks the static `js/apps-data.js` list. To have it also check apps added via Firestore, it needs the same admin credentials as the scripts above — locally it already picks up `serviceAccountKey.json` automatically, but GitHub Actions doesn't have that file (it's gitignored on purpose, it's a real secret), so it needs one extra step:
@@ -235,4 +241,5 @@ database.rules.json      Realtime Database security rules (presence)
 firebase.json            Firebase CLI project config (which rules file is which)
 scripts/seed-firebase.mjs  Pre-creates the Firestore docs the rules require (needs serviceAccountKey.json, gitignored)
 scripts/add-app.mjs      Adds one app to Firestore (listing + stats docs) without redeploying
+scripts/sync-apps.mjs    Upserts the entire js/apps-data.js list into Firestore in one shot
 ```

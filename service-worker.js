@@ -1,4 +1,4 @@
-const CACHE_NAME = "listenit-v7";
+const CACHE_NAME = "listenit-v8";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -12,24 +12,12 @@ const APP_SHELL = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/og-cover.jpg",
-  "/thumbnails/corporatesucks.jpg",
-  "/thumbnails/nostalgia-cassette.jpg",
-  "/thumbnails/deluxesalon.jpg",
-  "/thumbnails/chai-tapri.jpg",
-  "/thumbnails/pan-wala.jpg",
-  "/thumbnails/thenisai-saloon.jpg",
-  "/thumbnails/busdriver.jpg",
-  "/thumbnails/rickshaw-wala.jpg",
-  "/thumbnails/rickshaw-radio.jpg",
-  "/thumbnails/truckplaylist.jpg",
-  "/thumbnails/safar.jpg",
-  "/thumbnails/mehfil.jpg",
-  "/thumbnails/kudimagan.jpg",
-  "/thumbnails/garba-navratri.jpg",
-  "/thumbnails/rajasthani-folk.jpg",
-  "/thumbnails/bangla-bangers.jpg",
-  "/thumbnails/places-have-sound.jpg",
-  "/thumbnails/kassita.jpg",
+  // Individual per-app thumbnails aren't pre-cached here on purpose — with
+  // 40+ apps and growing, hardcoding every filename doesn't scale and is
+  // easy to forget on the next addition. They still end up cached for
+  // offline use via the general fetch handler below (network-first, cached
+  // as a side effect) the first time each one is actually viewed; only the
+  // universal fallback needs to be guaranteed available up front.
   "/thumbnails/placeholder.jpg"
 ];
 
