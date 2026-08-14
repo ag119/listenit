@@ -154,6 +154,7 @@
       .then((counts) => {
         if (counts && Object.keys(counts).length) {
           TRENDING = counts;
+          invalidateMix();
           renderGrid();
         }
       })
@@ -178,6 +179,7 @@
         const byId = new Map(appsList.map((a) => [a.id, a]));
         fetched.forEach((a) => { if (a && a.id) byId.set(a.id, a); });
         appsList = [...byId.values()];
+        invalidateMix();
         renderChips();
         renderGrid();
       })
@@ -266,6 +268,7 @@
     const fav = isFavorite(app.id);
     const down = !isAppUp(app.id);
     const plays = TRENDING[app.id] || 0;
+    const rCount = ratingCount(app.id);
     // Apps added via Firestore (see loadFirebaseApps) don't need a thumbnail
     // file shipped with the site — fall back to the generic placeholder.
     const fallbackThumb = app.thumbnail || "thumbnails/placeholder.jpg";
@@ -287,7 +290,7 @@
         <h3 class="card-title">${app.name}</h3>
         <p class="card-tagline">${down ? "Looks unreachable right now — tap to check anyway." : app.tagline}</p>
         <div class="card-footer">
-          <span class="card-domain">${app.domain}${plays > 0 ? ` · 🔥 ${plays}` : ""}</span>
+          <span class="card-domain">${app.domain}${rCount > 0 ? ` · ⭐ ${avgRating(app.id).toFixed(1)}` : ""}${plays > 0 ? ` · 🔥 ${plays}` : ""}</span>
           <span class="card-open">${down ? "Check ▸" : "Play ▸"}</span>
         </div>
       </div>
@@ -338,7 +341,9 @@
     }).sort((a, b) => {
       const downDiff = Number(isAppUp(a.id) === false) - Number(isAppUp(b.id) === false);
       if (downDiff !== 0) return downDiff; // down apps sink to the end
-      return (TRENDING[b.id] || 0) - (TRENDING[a.id] || 0); // then most-played first; stable (0-0 ties keep original order)
+      const ratingDiff = avgRating(b.id) - avgRating(a.id); // higher-rated apps float up (0 for unrated)
+      if (ratingDiff !== 0) return ratingDiff;
+      return (TRENDING[b.id] || 0) - (TRENDING[a.id] || 0); // tiebreak: most-played first; stable (0-0 ties keep original order)
     });
   }
 
@@ -358,21 +363,83 @@
     "Beyond India": "🌍"
   };
 
+  // "Mix" — one app per category, shown as its own section above the rest
+  // when browsing "All". Weighted toward each category's top-rated app,
+  // but not purely a popularity contest: MIX_DISCOVERY_CHANCE of the time
+  // it surfaces a different app from that category instead, so things
+  // without ratings yet still get seen. A category with no ratings at all
+  // just shuffles. Never surfaces a known-down app.
+  const MIX_DISCOVERY_CHANCE = 0.3;
+  let mixCache = null;
+  function invalidateMix() { mixCache = null; }
+
+  function pickMixApps() {
+    const byCategory = new Map();
+    appsList.forEach((app) => {
+      if (!isAppUp(app.id)) return;
+      if (!byCategory.has(app.category)) byCategory.set(app.category, []);
+      byCategory.get(app.category).push(app);
+    });
+
+    const orderedCats = [
+      ...CATEGORY_ORDER.filter((c) => byCategory.has(c)),
+      ...[...byCategory.keys()].filter((c) => !CATEGORY_ORDER.includes(c))
+    ];
+
+    return orderedCats.map((cat) => {
+      const pool = byCategory.get(cat);
+      const rated = pool
+        .filter((a) => ratingCount(a.id) > 0)
+        .sort((a, b) =>
+          avgRating(b.id) - avgRating(a.id) ||
+          ratingCount(b.id) - ratingCount(a.id) ||
+          (TRENDING[b.id] || 0) - (TRENDING[a.id] || 0)
+        );
+
+      if (rated.length === 0) {
+        return pool[Math.floor(Math.random() * pool.length)]; // no ratings here yet — shuffle
+      }
+      const winner = rated[0];
+      if (pool.length > 1 && Math.random() < MIX_DISCOVERY_CHANCE) {
+        const alternates = pool.filter((a) => a.id !== winner.id);
+        return alternates[Math.floor(Math.random() * alternates.length)];
+      }
+      return winner;
+    }).filter(Boolean);
+  }
+
+  function getMixApps() {
+    if (!mixCache) mixCache = pickMixApps();
+    return mixCache;
+  }
+
   function renderGrid() {
     const apps = filteredApps();
     gridEl.innerHTML = "";
     emptyState.classList.toggle("hidden", apps.length > 0);
     if (apps.length === 0) return;
 
-    // Only group into sections for the unfiltered "All" browse view — a
-    // specific category chip, Favorites, or a search are already a single
-    // focused list, sections would just add noise there.
+    // Only group into sections (Mix included) for the unfiltered "All"
+    // browse view — a specific category chip, Favorites, or a search are
+    // already a single focused list, sections would just add noise there.
     if (activeCategory !== "All" || searchTerm) {
       const flat = document.createElement("div");
       flat.className = "grid";
       apps.forEach((app) => flat.appendChild(cardTemplate(app)));
       gridEl.appendChild(flat);
       return;
+    }
+
+    const mixApps = getMixApps();
+    if (mixApps.length > 0) {
+      const mixSection = document.createElement("section");
+      mixSection.className = "category-section mix-section";
+      mixSection.innerHTML = `<h2 class="category-heading"><span aria-hidden="true">✨</span>Mix — one from every corner</h2>`;
+      const mixGrid = document.createElement("div");
+      mixGrid.className = "grid";
+      mixApps.forEach((app) => mixGrid.appendChild(cardTemplate(app)));
+      mixSection.appendChild(mixGrid);
+      gridEl.appendChild(mixSection);
     }
 
     const byCategory = new Map();
@@ -448,6 +515,7 @@
     LI.trackEvent("open_app", { app_id: app.id, app_name: app.name });
     LI.recordPlay(app.id);
     loadReactions(app.id);
+    loadRating(app.id);
 
     viewerName.textContent = app.name;
     viewerFavicon.src = initialsAvatar(app.name, 40);
@@ -517,6 +585,7 @@
     viewerFrame.src = "about:blank";
     clearTimeout(slowTimer);
     document.getElementById("viewerReactions").classList.add("hidden");
+    document.getElementById("viewerRating").classList.add("hidden");
     currentApp = null;
     if (pushState && location.search.includes("app=")) {
       history.pushState({}, "", location.pathname);
@@ -596,6 +665,88 @@
     });
   });
 
+  /* ---------------- Ratings ----------------
+   * One 5-star rating per app per browser (not per-emoji like reactions —
+   * a single running sum+count in Firestore, see firebase-app.mjs). Once
+   * cast it's locked (matches the increment-only Firestore rules, which
+   * don't allow changing a submitted rating). Before rating, the stars
+   * preview the current community average instead of sitting empty.
+   */
+  let RATINGS = {}; // { [appId]: { sum, count } }, populated by loadRatings()
+  function avgRating(id) {
+    const r = RATINGS[id];
+    return r && r.count > 0 ? r.sum / r.count : 0;
+  }
+  function ratingCount(id) {
+    return (RATINGS[id] && RATINGS[id].count) || 0;
+  }
+  function loadRatings() {
+    LI.getAllRatings()
+      .then((data) => {
+        if (data && Object.keys(data).length) {
+          RATINGS = data;
+          invalidateMix();
+          renderGrid();
+        }
+      })
+      .catch(() => {});
+  }
+
+  const MY_RATING_KEY = "listenit-ratings"; // { [appId]: stars } — this browser's own submitted ratings
+  function getMyRating(appId) {
+    try {
+      const all = JSON.parse(localStorage.getItem(MY_RATING_KEY)) || {};
+      return all[appId] || 0;
+    } catch { return 0; }
+  }
+  function setMyRating(appId, stars) {
+    let all = {};
+    try { all = JSON.parse(localStorage.getItem(MY_RATING_KEY)) || {}; } catch { /* ignore */ }
+    all[appId] = stars;
+    localStorage.setItem(MY_RATING_KEY, JSON.stringify(all));
+  }
+
+  const viewerRating = document.getElementById("viewerRating");
+  const ratingStars = [...viewerRating.querySelectorAll(".rating-star")];
+  const viewerRatingAvg = document.getElementById("viewerRatingAvg");
+
+  function fillStars(value) {
+    ratingStars.forEach((btn) => btn.classList.toggle("filled", Number(btn.dataset.star) <= value));
+  }
+
+  function loadRating(appId) {
+    viewerRating.classList.remove("hidden");
+    const mine = getMyRating(appId);
+    if (mine > 0) {
+      viewerRating.classList.add("rated");
+      fillStars(mine);
+      viewerRatingAvg.textContent = "You: " + mine + "★";
+    } else {
+      viewerRating.classList.remove("rated");
+      const avg = avgRating(appId);
+      const count = ratingCount(appId);
+      fillStars(Math.round(avg));
+      viewerRatingAvg.textContent = count > 0 ? avg.toFixed(1) + " (" + count + ")" : "Rate it";
+    }
+  }
+
+  ratingStars.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!currentApp || viewerRating.classList.contains("rated")) return;
+      const stars = Number(btn.dataset.star);
+      viewerRating.classList.add("rated");
+      fillStars(stars);
+      viewerRatingAvg.textContent = "You: " + stars + "★";
+      setMyRating(currentApp.id, stars);
+      // Optimistic local update so sort/Mix/card badges reflect it immediately
+      // rather than waiting on a full refetch of the ratings collection.
+      const prev = RATINGS[currentApp.id] || { sum: 0, count: 0 };
+      RATINGS[currentApp.id] = { sum: prev.sum + stars, count: prev.count + 1 };
+      LI.rate(currentApp.id, stars);
+      LI.trackEvent("rate", { app_id: currentApp.id, stars });
+    });
+  });
+
   /* ---------------- Live user count ---------------- */
   const liveUsersEl = document.getElementById("liveUsers");
   const liveUsersCountEl = document.getElementById("liveUsersCount");
@@ -611,6 +762,7 @@
     if (!e.detail || !e.detail.ok) return;
     loadFirebaseApps();
     loadTrending();
+    loadRatings();
     startLiveUserCount();
   });
 

@@ -2,8 +2,8 @@
 /**
  * Adds one app to the live site WITHOUT a redeploy — writes straight to
  * Firestore (which js/firebase-app.mjs's getApps() reads on every page
- * load), plus its appStats/reactions docs so trending & reactions work
- * immediately. This is the CLI alternative to adding the doc by hand in
+ * load), plus its appStats/reactions/ratings docs so trending, reactions
+ * and ratings all work immediately. This is the CLI alternative to adding the doc by hand in
  * the Firebase Console; either works equally well (client writes are
  * disabled by firestore.rules, this only works because it uses your own
  * admin credentials).
@@ -96,6 +96,10 @@ await db.collection("reactions").doc(id).set(
     heart: FieldValue.increment(0),
     sad: FieldValue.increment(0)
   },
+  { merge: true }
+);
+await db.collection("ratings").doc(id).set(
+  { sum: FieldValue.increment(0), count: FieldValue.increment(0) },
   { merge: true }
 );
 

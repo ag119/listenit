@@ -46,6 +46,22 @@ service cloud.firestore {
       return d.get('fire', 0) + d.get('heart', 0) + d.get('sad', 0);
     }
 
+    // Per-app 5-star ratings, stored as a running sum + count (average =
+    // sum/count, computed client-side) rather than one doc per rater — no
+    // auth on this site, so there's no per-user doc key to write to
+    // anyway. A write may only bump `count` by exactly 1 and `sum` by
+    // 1–5 in the same update (i.e. exactly one new rating, worth 1 to 5
+    // stars, ever), and may not touch any other field. Docs are
+    // pre-created by scripts/seed-firebase.mjs / sync-apps.mjs.
+    match /ratings/{appId} {
+      allow read: if true;
+      allow create, delete: if false;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sum', 'count'])
+                    && request.resource.data.count == resource.data.count + 1
+                    && request.resource.data.sum >= resource.data.sum + 1
+                    && request.resource.data.sum <= resource.data.sum + 5;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

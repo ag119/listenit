@@ -11,7 +11,7 @@
  * It does NOT delete Firestore docs for apps removed from the static file;
  * remove those by hand in the Console if you want the mirror exact.
  *
- * Also ensures every app has appStats/reactions docs (same as
+ * Also ensures every app has appStats/reactions/ratings docs (same as
  * scripts/seed-firebase.mjs — running both isn't necessary, this alone
  * covers it).
  *
@@ -67,7 +67,12 @@ await commitInChunks(APPS, (batch, app) => {
     { fire: FieldValue.increment(0), heart: FieldValue.increment(0), sad: FieldValue.increment(0) },
     { merge: true }
   );
+  batch.set(
+    db.collection("ratings").doc(app.id),
+    { sum: FieldValue.increment(0), count: FieldValue.increment(0) },
+    { merge: true }
+  );
 });
-console.log(`Ensured appStats/reactions docs for ${APPS.length} app(s).`);
+console.log(`Ensured appStats/reactions/ratings docs for ${APPS.length} app(s).`);
 
 process.exit(0);

@@ -231,6 +231,13 @@ button { font: inherit; }
   margin: 0 0 18px;
 }
 .category-heading span { font-size: 22px; }
+.mix-section .category-heading {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.mix-section .category-heading span { -webkit-text-fill-color: initial; }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -456,6 +463,51 @@ button { font: inherit; }
 .reaction-btn.reacted { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
 .reaction-btn.reacted:hover { transform: none; }
 .reaction-count { font-size: 8.5px; font-weight: 700; opacity: 0.85; min-width: 1ch; }
+
+/* Mirrors .viewer-reactions on the left edge — same reasoning (every app's
+   own controls live in a bottom bar, edges stay clear across all of them). */
+.viewer-rating {
+  position: absolute;
+  left: max(10px, env(safe-area-inset-left));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 5;
+}
+.rating-star {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .12s ease, color .15s ease;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.rating-star:hover { transform: scale(1.15); }
+.rating-star.filled { color: #facc15; }
+.viewer-rating.rated .rating-star { cursor: default; }
+.viewer-rating.rated .rating-star:hover { transform: none; }
+.rating-avg {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(10, 8, 18, 0.55);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 999px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
 
 /* ===== Live user count ===== */
 .live-users {

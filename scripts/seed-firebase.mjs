@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Creates (or safely re-touches, without resetting existing counts) the
- * appStats/{id} and reactions/{id} Firestore docs every app in
+ * appStats/{id}, reactions/{id} and ratings/{id} Firestore docs every app in
  * js/apps-data.js needs. Required because firestore.rules deliberately
  * disallows clients from creating these docs themselves (only
  * increment-by-1 updates are allowed) — so an admin has to pre-create them.
@@ -55,6 +55,10 @@ for (const app of APPS) {
       heart: FieldValue.increment(0),
       sad: FieldValue.increment(0)
     },
+    { merge: true }
+  );
+  await db.collection("ratings").doc(app.id).set(
+    { sum: FieldValue.increment(0), count: FieldValue.increment(0) },
     { merge: true }
   );
   console.log("seeded", app.id);

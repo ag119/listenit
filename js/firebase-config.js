@@ -36,5 +36,7 @@ window.ListenIt = {
   async react() {},
   async getReactionCounts() { return {}; },
   subscribeLiveUsers() { return () => {}; },
-  async getApps() { return []; }
+  async getApps() { return []; },
+  async rate() {},
+  async getAllRatings() { return {}; }
 };

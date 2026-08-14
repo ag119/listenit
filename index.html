@@ -149,6 +149,14 @@
       </div>
     </div>
     <iframe id="viewerFrame" title="App preview" allow="autoplay; encrypted-media" loading="eager"></iframe>
+    <div id="viewerRating" class="viewer-rating hidden" role="group" aria-label="Rate this app">
+      <button type="button" class="rating-star" data-star="5" aria-label="Rate 5 stars">★</button>
+      <button type="button" class="rating-star" data-star="4" aria-label="Rate 4 stars">★</button>
+      <button type="button" class="rating-star" data-star="3" aria-label="Rate 3 stars">★</button>
+      <button type="button" class="rating-star" data-star="2" aria-label="Rate 2 stars">★</button>
+      <button type="button" class="rating-star" data-star="1" aria-label="Rate 1 star">★</button>
+      <span id="viewerRatingAvg" class="rating-avg"></span>
+    </div>
     <div id="viewerReactions" class="viewer-reactions hidden" role="group" aria-label="React to this app">
       <button type="button" class="reaction-btn" data-key="fire">🔥<span class="reaction-count" data-count="fire">0</span></button>
       <button type="button" class="reaction-btn" data-key="heart">❤️<span class="reaction-count" data-count="heart">0</span></button>

@@ -100,6 +100,32 @@ async function init() {
     }
   };
 
+  /* ---------------- Ratings ----------------
+   * Stored as a running sum + count per app (average = sum/count, computed
+   * client-side) rather than one doc per rater — there's no auth on this
+   * site to key a per-user doc off of anyway. firestore.rules only allows
+   * a write that bumps count by 1 and sum by 1–5 in the same update, i.e.
+   * exactly one new star rating, ever — see the rules file for why that
+   * also means a rating can't be changed once cast (increment-only).
+   */
+  window.ListenIt.rate = async (appId, stars) => {
+    const n = Math.round(stars);
+    if (!(n >= 1 && n <= 5)) return;
+    try {
+      await updateDoc(doc(db, "ratings", appId), { sum: increment(n), count: increment(1) });
+    } catch (e) { /* ignore — UI already applied it optimistically */ }
+  };
+  window.ListenIt.getAllRatings = async () => {
+    try {
+      const snap = await getDocs(collection(db, "ratings"));
+      const out = {};
+      snap.forEach((d) => { out[d.id] = d.data(); });
+      return out;
+    } catch (e) {
+      return {};
+    }
+  };
+
   /* ---------------- Live user count ---------------- */
   if (cfg.databaseURL) {
     try {

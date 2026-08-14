@@ -84,15 +84,17 @@ node scripts/healthcheck.mjs
 
 For the workflow's auto-commit step to work on GitHub, enable write access once: **Settings → Actions → General → Workflow permissions → Read and write permissions**. You can also trigger it on demand from the **Actions** tab (`Health check listed apps` → **Run workflow**).
 
-## Firebase (analytics, trending, reactions, live users, remote app list)
+## Firebase (analytics, trending, ratings, reactions, live users, remote app list)
 
-Five features run on Firebase, all client-only for now (no custom backend — see "Is this safe?" below):
+Seven features run on Firebase, all client-only for now (no custom backend — see "Is this safe?" below):
 
 - **App listings** — apps can be added straight to Firestore and show up on next page load, no redeploy. See "Adding an app without redeploying" below.
-- **Analytics** — page views + custom events (which app got opened, Surprise Me clicks, submissions, installs, favorites, shares, reactions, category filters, searches). See every `LI.trackEvent(...)` call in `js/app.js`.
-- **Trending** — a `plays` counter per app in Firestore, bumped every time someone opens it. The grid sorts by this (after the down/up sort) and cards show a `🔥 N` count once `N > 0`.
+- **Analytics** — page views + custom events (which app got opened, Surprise Me clicks, submissions, installs, favorites, shares, reactions, ratings, category filters, searches). See every `LI.trackEvent(...)` call in `js/app.js`.
+- **Trending** — a `plays` counter per app in Firestore, bumped every time someone opens it. Cards show a `🔥 N` count once `N > 0`.
+- **Ratings** — a 1–5 star rating per app, shown as a floating strip in the viewer (mirrors the reactions strip, opposite edge). Each browser can rate an app once (tracked in `localStorage`); once cast, a rating can't be changed — see "Is this safe?" for why. The grid sorts by average rating first, `plays` as the tiebreak, and cards show `⭐ avg` once at least one rating exists.
 - **Reactions** — 🔥❤️😢 counters per app in Firestore, shown as a floating bar in the viewer. Each browser can react once per app per emoji (tracked in `localStorage`, not bulletproof, fine for a hobby site).
 - **Live user count** — "N people listening right now" in the hero, via Realtime Database's standard presence pattern (anonymous auth + `onDisconnect()`).
+- **Mix** — a featured section at the top of the "All" browse view, one app per category. Picks each category's top-rated app most of the time, but ~30% of the time (`MIX_DISCOVERY_CHANCE` in `js/app.js`) surfaces a different app from that category instead, so things without ratings yet still get seen; a category with no ratings at all just shuffles. Computed once per page load (not re-shuffled every time something unrelated re-renders the grid) and never surfaces a known-down app.
 
 **The site works identically with none of this set up.** `js/firebase-config.js` ships with placeholder values and a full no-op stub (`window.ListenIt`) — every call site in `app.js` calls it unconditionally, so until you configure a real project (or if Firebase ever fails to load), those calls just do nothing and the site runs entirely off `js/apps-data.js` as before.
 
@@ -101,7 +103,7 @@ Five features run on Firebase, all client-only for now (no custom backend — se
 Yes, with one thing to get right. The config in `js/firebase-config.js` is **not a secret** — Firebase's client config is meant to be public, it's in every Firebase web app's page source. The actual security boundary is the **rules** (`firestore.rules`, `database.rules.json`), enforced server-side:
 
 - The `apps` collection (what gets listed and loaded into the iframe viewer) is **read-only from the client** — `allow write: if false`, full stop. This matters more than the increment-only counters below: if visitors could write here, anyone could inject an arbitrary URL into your directory and have it load inside your site's viewer. You add entries with your own admin credentials (Console or `scripts/add-app.mjs`), which bypass rules entirely — that's expected, rules only govern the client SDK.
-- `appStats` and `reactions` are increment-only: a client can bump `plays` by exactly 1, or the sum of the reaction counters by exactly 1, and touch nothing else — no arbitrary values, no decrementing. See the rules files for the exact logic.
+- `appStats`, `reactions` and `ratings` are increment-only: a client can bump `plays` by exactly 1, the sum of the reaction counters by exactly 1, or (for ratings) `count` by exactly 1 with `sum` rising by 1–5 in that same write, and touch nothing else — no arbitrary values, no decrementing. This is also why a submitted rating can't be edited: there's no "subtract the old value" a client is allowed to do, only ever add a new one. See the rules files for the exact logic.
 - Presence writes are locked to `presence/{your-own-anonymous-uid}`, set to `true` only — you can't write another user's key or arbitrary data.
 - The one genuine secret in this setup is `serviceAccountKey.json` (used only by the `scripts/*.mjs` admin scripts, run locally/by you, never shipped to the site). It's in `.gitignore` — never commit it.
 
@@ -136,7 +138,7 @@ Once Firebase is set up (above), you have two ways to add a listing — pick whi
 1. Firestore Database → Start collection (or open the existing one) → collection ID `apps`.
 2. Document ID: your app's slug, e.g. `night-auto-radio` (this becomes its `id`).
 3. Add fields — same shape as `js/apps-data.js`: `name`, `url`, `domain`, `tagline`, `category` (string, required); `embeddable` (boolean, default `true` if omitted); `thumbnail` (string, **optional** — leave it out and the site uses the generic placeholder + live thum.io screenshot, same as everything else).
-4. Save. Reload the site — it's there. To also seed its `appStats`/`reactions` docs (so trending/reactions work immediately instead of on first read), run `npm run seed-firebase` afterwards.
+4. Save. Reload the site — it's there. To also seed its `appStats`/`reactions`/`ratings` docs (so trending/reactions/ratings work immediately instead of on first read), run `npm run seed-firebase` afterwards.
 
 **B. CLI script** (does all of the above, including seeding, in one step):
 ```bash
@@ -157,7 +159,7 @@ Either way, `firestore.rules` keeps the `apps` collection **read-only from the c
 ```bash
 node scripts/sync-apps.mjs
 ```
-Upserts every app in `js/apps-data.js` into Firestore (and seeds their `appStats`/`reactions` docs) — safe to re-run any time. It doesn't delete Firestore docs for apps you've since removed from the static file; do that by hand in the Console if you want an exact mirror.
+Upserts every app in `js/apps-data.js` into Firestore (and seeds their `appStats`/`reactions`/`ratings` docs) — safe to re-run any time. It doesn't delete Firestore docs for apps you've since removed from the static file; do that by hand in the Console if you want an exact mirror.
 
 ### Covering Firebase-added apps in the health check
 
