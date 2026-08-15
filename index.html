@@ -146,6 +146,9 @@
       <button id="viewerWakeLock" class="btn btn-icon hidden" type="button" aria-label="Keep screen awake" title="Keep screen awake — stops auto-lock from interrupting playback">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 3h8l-1 8h3l-9 10 2-8H8l1-10z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
       </button>
+      <button id="viewerTimer" class="btn btn-icon" type="button" aria-label="Sleep or focus timer" title="Sleep / focus timer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 9v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
       <a id="viewerOpenTab" class="btn btn-icon" target="_blank" rel="noopener" aria-label="Open in new tab" title="Open in new tab">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M10 14L20 4M19 13v6a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
@@ -166,6 +169,34 @@
       </button>
     </div>
     <div id="viewerChatSlot" class="viewer-chat-slot"></div>
+  </div>
+  <div id="timerPanel" class="timer-panel" role="dialog" aria-label="Sleep or focus timer">
+    <div class="timer-panel-header">
+      <strong>⏱ Timer</strong>
+      <button id="timerPanelClose" class="btn btn-icon" type="button" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="timerIdle" class="timer-idle">
+      <div class="timer-section">
+        <p class="timer-section-label">😴 Sleep — stop playback after</p>
+        <div class="timer-btn-row">
+          <button class="timer-preset-btn" type="button" data-sleep="15">15m</button>
+          <button class="timer-preset-btn" type="button" data-sleep="30">30m</button>
+          <button class="timer-preset-btn" type="button" data-sleep="45">45m</button>
+          <button class="timer-preset-btn" type="button" data-sleep="60">60m</button>
+        </div>
+      </div>
+      <div class="timer-section">
+        <p class="timer-section-label">🎯 Focus — 25 min work / 5 min break</p>
+        <button id="timerStartFocus" class="btn btn-secondary btn-block" type="button">Start focus session</button>
+      </div>
+    </div>
+    <div id="timerActive" class="timer-active hidden">
+      <p id="timerActiveLabel" class="timer-active-label"></p>
+      <p id="timerActiveCountdown" class="timer-active-countdown"></p>
+      <button id="timerCancel" class="btn btn-secondary btn-block" type="button">Cancel timer</button>
+    </div>
   </div>
   <div class="viewer-body">
     <div id="viewerLoading" class="viewer-loading">

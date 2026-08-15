@@ -564,6 +564,130 @@
     });
   }
 
+  /* ---------------- Sleep / focus timer ----------------
+   * Pure client-side, no backend, works everywhere — unlike Wake Lock or
+   * PiP this needs no feature detection. Two modes, only one can run at a
+   * time: "sleep" closes the viewer when it elapses (which stops the
+   * embedded app the same way the back button does — we own our own
+   * iframe's src, no cross-origin issue there); "focus" is a Pomodoro
+   * cycle (25 min work / 5 min break, repeating) that just chimes and
+   * toasts at each transition without touching playback. Survives
+   * switching to a different app in the viewer (the underlying intent —
+   * "wind down" or "stay focused" — doesn't change just because the app
+   * did), but is cleared whenever the viewer actually closes, same as
+   * Wake Lock, since closing always stops playback anyway.
+   */
+  const viewerTimer = document.getElementById("viewerTimer");
+  const timerPanel = document.getElementById("timerPanel");
+  const timerPanelClose = document.getElementById("timerPanelClose");
+  const timerIdle = document.getElementById("timerIdle");
+  const timerActive = document.getElementById("timerActive");
+  const timerActiveLabel = document.getElementById("timerActiveLabel");
+  const timerActiveCountdown = document.getElementById("timerActiveCountdown");
+  const FOCUS_MINUTES = 25;
+  const BREAK_MINUTES = 5;
+  let timerMode = null; // null | "sleep" | "focus-work" | "focus-break"
+  let timerPhaseEndAt = 0;
+  let timerTickInterval = null;
+
+  function formatCountdown(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    return `${Math.floor(totalSec / 60)}:${String(totalSec % 60).padStart(2, "0")}`;
+  }
+
+  function renderTimerPanel() {
+    if (!timerMode) {
+      timerIdle.classList.remove("hidden");
+      timerActive.classList.add("hidden");
+      return;
+    }
+    timerIdle.classList.add("hidden");
+    timerActive.classList.remove("hidden");
+    timerActiveLabel.textContent =
+      timerMode === "sleep" ? "😴 Stopping playback in"
+      : timerMode === "focus-work" ? "🎯 Focus — break in"
+      : "☕ Break — back to focus in";
+    timerActiveCountdown.textContent = formatCountdown(timerPhaseEndAt - Date.now());
+  }
+
+  function stopTimer() {
+    timerMode = null;
+    clearInterval(timerTickInterval);
+    timerTickInterval = null;
+    viewerTimer.classList.remove("active");
+    renderTimerPanel();
+  }
+
+  function onTimerPhaseEnd() {
+    if (timerMode === "sleep") {
+      playTone([{ freq: 660, start: 0, dur: 0.2 }, { freq: 440, start: 0.16, dur: 0.3 }]);
+      showToast("😴 Sleep timer ended — playback stopped");
+      stopTimer();
+      closeViewer();
+    } else if (timerMode === "focus-work") {
+      playTone([{ freq: 784, start: 0, dur: 0.15 }, { freq: 988, start: 0.12, dur: 0.2 }]);
+      showToast(`🎯 Focus session done — take a ${BREAK_MINUTES} min break`);
+      timerMode = "focus-break";
+      timerPhaseEndAt = Date.now() + BREAK_MINUTES * 60000;
+      renderTimerPanel();
+    } else {
+      playTone([{ freq: 523, start: 0, dur: 0.15 }, { freq: 659, start: 0.12, dur: 0.2 }]);
+      showToast("☕ Break's over — back to focus");
+      timerMode = "focus-work";
+      timerPhaseEndAt = Date.now() + FOCUS_MINUTES * 60000;
+      renderTimerPanel();
+    }
+  }
+
+  function startTimerTicking() {
+    clearInterval(timerTickInterval);
+    timerTickInterval = setInterval(() => {
+      if (timerPhaseEndAt - Date.now() <= 0) onTimerPhaseEnd();
+      else renderTimerPanel();
+    }, 1000);
+  }
+
+  function startSleepTimer(minutes) {
+    timerMode = "sleep";
+    timerPhaseEndAt = Date.now() + minutes * 60000;
+    viewerTimer.classList.add("active");
+    startTimerTicking();
+    renderTimerPanel();
+    showToast(`😴 Playback will stop in ${minutes} min`);
+    LI.trackEvent("sleep_timer_start", { minutes });
+  }
+  function startFocusTimer() {
+    timerMode = "focus-work";
+    timerPhaseEndAt = Date.now() + FOCUS_MINUTES * 60000;
+    viewerTimer.classList.add("active");
+    startTimerTicking();
+    renderTimerPanel();
+    showToast(`🎯 Focus session started — ${FOCUS_MINUTES} min`);
+    LI.trackEvent("focus_timer_start", {});
+  }
+
+  function openTimerPanel() {
+    closeViewerChat(); // avoid two popovers stacked awkwardly
+    renderTimerPanel();
+    timerPanel.classList.add("open");
+  }
+  function closeTimerPanel() {
+    timerPanel.classList.remove("open");
+  }
+  viewerTimer.addEventListener("click", () => {
+    if (timerPanel.classList.contains("open")) closeTimerPanel();
+    else openTimerPanel();
+  });
+  timerPanelClose.addEventListener("click", closeTimerPanel);
+  document.querySelectorAll(".timer-preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => startSleepTimer(Number(btn.dataset.sleep)));
+  });
+  document.getElementById("timerStartFocus").addEventListener("click", startFocusTimer);
+  document.getElementById("timerCancel").addEventListener("click", () => {
+    stopTimer();
+    showToast("Timer cancelled");
+  });
+
   function hideAllViewerPanels() {
     viewerLoading.classList.add("hidden");
     viewerBlocked.classList.add("hidden");
@@ -697,6 +821,8 @@
     viewer.classList.add("hidden");
     unlockBodyScroll();
     releaseWakeLock(); // nothing left in the main viewer to protect from auto-lock
+    stopTimer(); // closing always stops playback too, so any sleep/focus timer has nothing left to track
+    closeTimerPanel();
     // When handing off to a PiP window, viewerFrame has just been moved
     // there — leave its src alone so the popped-out app keeps playing.
     if (!opts.keepPip) viewerFrame.src = "about:blank";
@@ -998,6 +1124,7 @@
   const cloudSkyHomeParent = cloudSkySection.parentNode;
   const cloudSkyHomeNextSibling = cloudSkySection.nextSibling;
   function openViewerChat() {
+    closeTimerPanel(); // avoid two popovers stacked awkwardly
     viewerChatSlot.appendChild(cloudSkySection);
     applyCloudSkyCollapsedState(); // always fully expanded once docked
     viewerChatPanel.classList.add("open");
