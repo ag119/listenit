@@ -41,5 +41,10 @@ window.ListenIt = {
   async getAllRatings() { return {}; },
   async postCloud() { return null; },
   async replyToCloud() { return false; },
-  subscribeClouds() { return () => {}; }
+  subscribeClouds() { return () => {}; },
+  async rateSite() {},
+  async getSiteRating() { return { sum: 0, count: 0 }; },
+  async submitFeedback() { return null; },
+  async getFeedback() { return []; },
+  async voteFeedback() { return false; }
 };

@@ -27,7 +27,7 @@ function announce(ok) {
 
 async function init() {
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`);
-  const { getFirestore, doc, getDoc, collection, getDocs, updateDoc, increment } =
+  const { getFirestore, doc, getDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } =
     await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`);
 
   const app = initializeApp(cfg);
@@ -123,6 +123,73 @@ async function init() {
       return out;
     } catch (e) {
       return {};
+    }
+  };
+
+  /* ---------------- Site rating ----------------
+   * How people feel about ListenIt itself, not any one app — same running
+   * sum+count pattern as per-app ratings, but its own doc (`siteRating/
+   * overall`) so it can never leak into the `ratings` collection that
+   * drives the IMDb-weighted app ranking.
+   */
+  window.ListenIt.rateSite = async (stars) => {
+    const n = Math.round(stars);
+    if (!(n >= 1 && n <= 5)) return;
+    try {
+      await updateDoc(doc(db, "siteRating", "overall"), { sum: increment(n), count: increment(1) });
+    } catch (e) { /* ignore — UI already applied it optimistically */ }
+  };
+  window.ListenIt.getSiteRating = async () => {
+    try {
+      const snap = await getDoc(doc(db, "siteRating", "overall"));
+      return snap.exists() ? snap.data() : { sum: 0, count: 0 };
+    } catch (e) {
+      return { sum: 0, count: 0 };
+    }
+  };
+
+  /* ---------------- Feedback & feature requests ----------------
+   * A public board — anyone can post an idea, anyone can upvote/downvote
+   * it once. Votes are increment-only and create-once per doc, same
+   * philosophy as ratings/reactions: no client can edit someone else's
+   * post, change its own past vote, or touch anything but the two
+   * counters — see firestore.rules for the exact logic.
+   */
+  window.ListenIt.submitFeedback = async (title, description, authorName) => {
+    const t = String(title || "").trim().slice(0, 80);
+    if (!t) return null;
+    try {
+      const ref = await addDoc(collection(db, "featureRequests"), {
+        title: t,
+        description: String(description || "").trim().slice(0, 300),
+        authorName: String(authorName || "").trim().slice(0, 24) || "Anon",
+        upvotes: 0,
+        downvotes: 0,
+        status: "open",
+        createdAt: serverTimestamp()
+      });
+      return ref.id;
+    } catch (e) {
+      return null;
+    }
+  };
+  window.ListenIt.getFeedback = async () => {
+    try {
+      const snap = await getDocs(collection(db, "featureRequests"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
+  window.ListenIt.voteFeedback = async (id, direction) => {
+    const field = direction === "up" ? "upvotes" : "downvotes";
+    try {
+      await updateDoc(doc(db, "featureRequests", id), { [field]: increment(1) });
+      return true;
+    } catch (e) {
+      return false;
     }
   };
 

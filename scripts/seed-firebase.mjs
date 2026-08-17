@@ -64,5 +64,13 @@ for (const app of APPS) {
   console.log("seeded", app.id);
 }
 
+// Overall site rating — a singleton doc, not per-app, so it needs its own
+// one-time seed rather than a loop.
+await db.collection("siteRating").doc("overall").set(
+  { sum: FieldValue.increment(0), count: FieldValue.increment(0) },
+  { merge: true }
+);
+console.log("seeded siteRating/overall");
+
 console.log(`\nDone — ${APPS.length} app(s) seeded.`);
 process.exit(0);

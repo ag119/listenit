@@ -1055,6 +1055,216 @@
     });
   }
 
+  /* ---------------- Feedback & feature-request board ----------------
+   * A public board (Firestore `featureRequests` + a singleton `siteRating/
+   * overall` doc) — anyone can rate the site, post an idea, or upvote/
+   * downvote one someone else posted. Loaded lazily when the modal opens
+   * rather than on every page load, since — unlike ratings/reactions —
+   * nothing on the homepage depends on this data. Same "no take-backs"
+   * philosophy as app ratings: once you vote up or down on a request, or
+   * rate the site, that choice is locked in (see firestore.rules) — the
+   * localStorage checks below are what surface that in the UI, not what
+   * enforces it.
+   */
+  const feedbackModal = document.getElementById("feedbackModal");
+  const feedbackBackdrop = document.getElementById("feedbackBackdrop");
+  const feedbackClose = document.getElementById("feedbackClose");
+  const feedbackForm = document.getElementById("feedbackForm");
+  const ffTitle = document.getElementById("ffTitle");
+  const ffDescription = document.getElementById("ffDescription");
+  const ffName = document.getElementById("ffName");
+  const feedbackList = document.getElementById("feedbackList");
+  const siteRatingStarsEl = document.getElementById("siteRatingStars");
+  const siteRatingStars = [...siteRatingStarsEl.querySelectorAll(".site-rating-star")];
+  const siteRatingAvgEl = document.getElementById("siteRatingAvg");
+
+  const FEEDBACK_POST_COOLDOWN_MS = 30000;
+  const STATUS_LABELS = { planned: "🚧 Planned", shipped: "✅ Shipped", declined: "Declined" };
+
+  function myFeedbackVotes() {
+    try { return JSON.parse(localStorage.getItem("listenit_fr_votes")) || {}; } catch { return {}; }
+  }
+  function setMyFeedbackVote(id, direction) {
+    const all = myFeedbackVotes();
+    all[id] = direction;
+    localStorage.setItem("listenit_fr_votes", JSON.stringify(all));
+  }
+
+  function fillSiteRatingStars(value) {
+    siteRatingStars.forEach((btn) => btn.classList.toggle("filled", Number(btn.dataset.star) <= value));
+  }
+
+  async function loadSiteRating() {
+    const mine = Number(localStorage.getItem("listenit_site_rating") || 0);
+    if (mine > 0) {
+      siteRatingStarsEl.classList.add("rated");
+      fillSiteRatingStars(mine);
+      siteRatingAvgEl.textContent = "You: " + mine + "★";
+      return;
+    }
+    siteRatingStarsEl.classList.remove("rated");
+    const { sum = 0, count = 0 } = await LI.getSiteRating();
+    fillSiteRatingStars(count > 0 ? Math.round(sum / count) : 0);
+    siteRatingAvgEl.textContent = count > 0 ? (sum / count).toFixed(1) + " (" + count + ")" : "Rate it";
+  }
+
+  siteRatingStars.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (siteRatingStarsEl.classList.contains("rated")) return;
+      const stars = Number(btn.dataset.star);
+      siteRatingStarsEl.classList.add("rated");
+      fillSiteRatingStars(stars);
+      siteRatingAvgEl.textContent = "You: " + stars + "★";
+      localStorage.setItem("listenit_site_rating", String(stars));
+      LI.rateSite(stars);
+      LI.trackEvent("rate_site", { stars });
+    });
+  });
+
+  function timeAgo(ms) {
+    const diff = Date.now() - ms;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return "just now";
+    if (min < 60) return min + "m ago";
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + "h ago";
+    return Math.floor(hr / 24) + "d ago";
+  }
+
+  function renderFeedbackList(items) {
+    feedbackList.innerHTML = "";
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "feedback-empty";
+      empty.textContent = "No ideas posted yet — be the first.";
+      feedbackList.appendChild(empty);
+      return;
+    }
+
+    const votes = myFeedbackVotes();
+    const sorted = [...items].sort((a, b) => {
+      const scoreDiff = ((b.upvotes || 0) - (b.downvotes || 0)) - ((a.upvotes || 0) - (a.downvotes || 0));
+      if (scoreDiff !== 0) return scoreDiff;
+      return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+    });
+
+    sorted.forEach((item) => {
+      const el = document.createElement("div");
+      el.className = "feedback-item";
+
+      const votesCol = document.createElement("div");
+      votesCol.className = "feedback-votes";
+      const myVote = votes[item.id];
+
+      const upBtn = document.createElement("button");
+      upBtn.type = "button";
+      upBtn.className = "feedback-vote-btn feedback-vote-up";
+      upBtn.textContent = "▲";
+      upBtn.setAttribute("aria-label", "Upvote");
+      if (myVote) upBtn.disabled = true;
+      if (myVote === "up") upBtn.classList.add("voted");
+
+      const score = document.createElement("span");
+      score.className = "feedback-score";
+      score.textContent = String((item.upvotes || 0) - (item.downvotes || 0));
+
+      const downBtn = document.createElement("button");
+      downBtn.type = "button";
+      downBtn.className = "feedback-vote-btn feedback-vote-down";
+      downBtn.textContent = "▼";
+      downBtn.setAttribute("aria-label", "Downvote");
+      if (myVote) downBtn.disabled = true;
+      if (myVote === "down") downBtn.classList.add("voted");
+
+      [upBtn, downBtn].forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (myFeedbackVotes()[item.id]) return; // one vote per browser, no take-backs — see rules
+          const direction = btn === upBtn ? "up" : "down";
+          setMyFeedbackVote(item.id, direction);
+          if (direction === "up") item.upvotes = (item.upvotes || 0) + 1;
+          else item.downvotes = (item.downvotes || 0) + 1;
+          LI.voteFeedback(item.id, direction);
+          LI.trackEvent("vote_feedback", { id: item.id, direction });
+          renderFeedbackList(items); // re-render from the same in-memory list, optimistically updated
+        });
+      });
+
+      votesCol.append(upBtn, score, downBtn);
+
+      const body = document.createElement("div");
+      body.className = "feedback-body";
+
+      const title = document.createElement("p");
+      title.className = "feedback-item-title";
+      title.textContent = item.title || "";
+      body.appendChild(title);
+
+      if (item.description) {
+        const desc = document.createElement("p");
+        desc.className = "feedback-item-desc";
+        desc.textContent = item.description;
+        body.appendChild(desc);
+      }
+
+      const meta = document.createElement("p");
+      meta.className = "feedback-item-meta";
+      const authorSpan = document.createElement("span");
+      authorSpan.textContent = "— " + (item.authorName || "Anon") +
+        (item.createdAt?.seconds ? " · " + timeAgo(item.createdAt.seconds * 1000) : "");
+      meta.appendChild(authorSpan);
+      if (item.status && item.status !== "open") {
+        const badge = document.createElement("span");
+        badge.className = "feedback-status-badge status-" + item.status;
+        badge.textContent = STATUS_LABELS[item.status] || item.status;
+        meta.appendChild(badge);
+      }
+      body.appendChild(meta);
+
+      el.append(votesCol, body);
+      feedbackList.appendChild(el);
+    });
+  }
+
+  async function loadFeedbackList() {
+    feedbackList.innerHTML = '<p class="feedback-empty">Loading…</p>';
+    const items = await LI.getFeedback();
+    renderFeedbackList(items);
+  }
+
+  function openFeedbackModal() {
+    feedbackModal.classList.remove("hidden");
+    lockBodyScroll();
+    loadSiteRating();
+    loadFeedbackList();
+    LI.trackEvent("feedback_modal_open", {});
+  }
+  function closeFeedbackModal() {
+    feedbackModal.classList.add("hidden");
+    unlockBodyScroll();
+  }
+  document.getElementById("footerFeedbackBtn").addEventListener("click", openFeedbackModal);
+  feedbackClose.addEventListener("click", closeFeedbackModal);
+  feedbackBackdrop.addEventListener("click", closeFeedbackModal);
+
+  feedbackForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = ffTitle.value.trim();
+    if (!title) return;
+    const last = Number(localStorage.getItem("listenit_last_feedback_post") || 0);
+    const left = FEEDBACK_POST_COOLDOWN_MS - (Date.now() - last);
+    if (left > 0) { showToast(`Give it ${Math.ceil(left / 1000)}s before posting another idea`); return; }
+    localStorage.setItem("listenit_last_feedback_post", String(Date.now()));
+    const description = ffDescription.value.trim();
+    const name = ffName.value.trim();
+    const id = await LI.submitFeedback(title, description, name);
+    if (!id) { showToast("Couldn't post that — try again in a bit"); return; }
+    ffTitle.value = "";
+    ffDescription.value = "";
+    LI.trackEvent("submit_feedback", {});
+    showToast("💡 Idea posted — thanks!");
+    loadFeedbackList();
+  });
+
   /* ---------------- Message clouds ----------------
    * Floating, self-expiring public messages (Realtime Database — see
    * js/firebase-app.mjs and database.rules.json). The whole feature stays
@@ -1423,6 +1633,7 @@
       if (!viewer.classList.contains("hidden")) closeViewer();
       if (!submitModal.classList.contains("hidden")) closeSubmitModal();
       if (!cloudModal.classList.contains("hidden")) closeCloudModal();
+      if (!feedbackModal.classList.contains("hidden")) closeFeedbackModal();
     }
   });
 

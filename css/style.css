@@ -796,6 +796,108 @@ button { font: inherit; }
 .submit-form input:focus, .submit-form textarea:focus { border-color: var(--accent); }
 .form-note { font-size: 12.5px; color: var(--text-faint); margin: -4px 0 2px; }
 
+/* ===== Feedback & feature requests ===== */
+.feedback-modal-panel { max-width: 480px; }
+.site-rating-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev-2);
+  margin-bottom: 18px;
+}
+.site-rating-label { font-size: 13.5px; font-weight: 600; margin: 0; }
+.site-rating-stars { display: flex; align-items: center; gap: 2px; }
+.site-rating-star {
+  border: none;
+  background: none;
+  color: var(--border);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform .12s ease, color .15s ease;
+}
+.site-rating-star:hover { transform: scale(1.15); }
+.site-rating-star.filled { color: #facc15; }
+.site-rating-stars.rated .site-rating-star { cursor: default; }
+.site-rating-stars.rated .site-rating-star:hover { transform: none; }
+.site-rating-avg { margin-left: 6px; font-size: 12px; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
+
+.feedback-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+.feedback-form input, .feedback-form textarea {
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+}
+.feedback-form input:focus, .feedback-form textarea:focus { border-color: var(--accent); }
+.feedback-form-row { display: flex; gap: 8px; }
+.feedback-form-row input { flex: 1; min-width: 0; }
+.feedback-form-row button { flex-shrink: 0; }
+
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.feedback-empty { color: var(--text-faint); font-size: 13px; text-align: center; padding: 8px 0; }
+.feedback-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev-2);
+}
+.feedback-votes { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+.feedback-vote-btn {
+  width: 26px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+}
+.feedback-vote-btn:hover { border-color: var(--accent); color: var(--text); }
+.feedback-vote-btn.voted { color: #fff; border-color: transparent; cursor: default; }
+.feedback-vote-up.voted { background: var(--success); }
+.feedback-vote-down.voted { background: var(--accent-2); }
+.feedback-vote-btn[disabled] { cursor: default; opacity: 0.55; }
+.feedback-score { font-size: 13px; font-weight: 700; }
+.feedback-body { min-width: 0; flex: 1; }
+.feedback-item-title { margin: 0; font-size: 14px; font-weight: 700; overflow-wrap: break-word; }
+.feedback-item-desc { margin: 3px 0 0; font-size: 13px; color: var(--text-dim); line-height: 1.4; overflow-wrap: break-word; }
+.feedback-item-meta { margin: 6px 0 0; font-size: 11.5px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
+.feedback-status-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.feedback-status-badge.status-planned { color: var(--accent); border-color: var(--accent); }
+.feedback-status-badge.status-shipped { color: var(--success); border-color: var(--success); }
+.feedback-status-badge.status-declined { color: var(--text-faint); }
+
 /* ===== Install PWA banner ===== */
 .install-banner {
   position: fixed;
