@@ -1047,8 +1047,10 @@
   /* ---------------- Live user count ---------------- */
   const liveUsersEl = document.getElementById("liveUsers");
   const liveUsersCountEl = document.getElementById("liveUsersCount");
+  let latestLiveUserCount = 0;
   function startLiveUserCount() {
     LI.subscribeLiveUsers((count) => {
+      latestLiveUserCount = count || 0;
       if (!count || count < 1) { liveUsersEl.classList.add("hidden"); return; }
       liveUsersCountEl.textContent = count === 1 ? "1 person listening right now" : `${count} people listening right now`;
       liveUsersEl.classList.remove("hidden");
@@ -1568,6 +1570,83 @@
     else LI.trackEvent("reply_cloud", {});
   });
 
+  /* ---------------- Chat nudge ----------------
+   * A one-time, purely client-side onboarding hint — text composed
+   * locally, never written to Firebase, doesn't count as a real cloud,
+   * nothing about it is visible to anyone else. Only triggered once, from
+   * the very first subscribeClouds snapshot (see startCloudSky below),
+   * and only when that snapshot is genuinely empty — real activity always
+   * wins over a canned tip, and it's re-checked again right before each
+   * message actually shows in case someone else posted in the meantime.
+   */
+  const chatNudge = document.getElementById("chatNudge");
+  const chatNudgeText = document.getElementById("chatNudgeText");
+  const chatNudgeClose = document.getElementById("chatNudgeClose");
+  const NUDGE_SHOW_DELAY_MS = 2500;
+  const NUDGE_VISIBLE_MS = 6000;
+  const NUDGE_GAP_MS = 3000;
+  let nudgeEngaged = false; // true once the visitor clicks through — skip the follow-up tip, they already found it
+
+  function playNudgeChime() {
+    if (cloudSoundEnabled) playTone([{ freq: 740, start: 0, dur: 0.16 }, { freq: 988, start: 0.1, dur: 0.22 }]);
+  }
+
+  // "Quiet" means no cloud anyone would actually see right now — RTDB has
+  // no TTL of its own (see the message-clouds notes elsewhere in this
+  // file), so raw snapshots routinely contain long-expired rows nobody's
+  // pruned yet. Must filter by expiresAt, same as renderCloudSky does,
+  // or a database full of stale rows looks "busy" and the nudge never
+  // fires for a genuinely empty-looking chat.
+  function hasActiveClouds(list) {
+    const now = Date.now();
+    return list.some((c) => c.expiresAt > now);
+  }
+  function chatIsStillQuiet() {
+    return !hasActiveClouds(Object.values(clouds)) && viewer.classList.contains("hidden");
+  }
+
+  function showChatNudge(text, onDismissShowNext) {
+    chatNudgeText.textContent = text;
+    chatNudge.classList.remove("hidden"); // only needed once — mirrors cloudSkySection's own reveal-once pattern
+    chatNudge.classList.add("show");
+    playNudgeChime();
+    const hideTimer = setTimeout(hide, NUDGE_VISIBLE_MS);
+    function hide() {
+      clearTimeout(hideTimer);
+      chatNudge.classList.remove("show");
+      chatNudge.onclick = null;
+      if (onDismissShowNext && !nudgeEngaged) setTimeout(onDismissShowNext, NUDGE_GAP_MS);
+    }
+    chatNudgeClose.onclick = (e) => { e.stopPropagation(); hide(); };
+    chatNudge.onclick = () => {
+      nudgeEngaged = true;
+      hide();
+      if (cloudSkySection.parentNode === viewerChatSlot) return; // already docked in the viewer drawer
+      if (cloudSkySection.classList.contains("collapsed")) {
+        cloudSkyCollapsed = false;
+        localStorage.setItem("listenit_cloud_sky_collapsed", "0");
+        applyCloudSkyCollapsedState();
+      }
+      cloudSkySection.scrollIntoView({ behavior: "smooth", block: "center" });
+      cloudTextInput.focus();
+    };
+  }
+
+  function maybeStartChatNudgeSequence(wasEmptyOnFirstLoad) {
+    if (!wasEmptyOnFirstLoad) return;
+    setTimeout(() => {
+      if (!chatIsStillQuiet()) return;
+      const n = latestLiveUserCount;
+      const text = n > 1
+        ? `🎧 ${n} people are listening right now — say hi in the chat!`
+        : "🎧 Be the first to say something — start a chat below!";
+      showChatNudge(text, () => {
+        if (!chatIsStillQuiet()) return;
+        showChatNudge("💬 The more replies a message gets, the longer — and bigger — it floats!");
+      });
+    }, NUDGE_SHOW_DELAY_MS);
+  }
+
   function startCloudSky() {
     LI.subscribeClouds((list) => {
       cloudSkySection.classList.remove("hidden");
@@ -1577,6 +1656,7 @@
         const stored = localStorage.getItem("listenit_cloud_sky_collapsed");
         cloudSkyCollapsed = stored !== null ? stored === "1" : window.matchMedia("(max-width: 640px)").matches;
         applyCloudSkyCollapsedState();
+        maybeStartChatNudgeSequence(!hasActiveClouds(list));
       }
 
       // Diff against the previous snapshot to decide whether to chime —

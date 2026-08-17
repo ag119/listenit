@@ -975,6 +975,45 @@ button { font: inherit; }
 }
 @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
+/* ===== Chat nudge =====
+ * A one-time, client-only onboarding hint — never written to Firebase,
+ * only ever shown when the cloud sky is confirmed working but genuinely
+ * empty (see js/app.js). Centered but modest and easy to dismiss, so it
+ * can't trap anything underneath it — same non-interference reasoning as
+ * every other floating element on this site.
+ */
+.chat-nudge {
+  position: fixed;
+  top: 22%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  max-width: min(340px, calc(100vw - 40px));
+  background: var(--bg-elev);
+  border: 1px solid var(--accent);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4), 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--radius);
+  padding: 16px 34px 16px 18px;
+  z-index: 150;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.chat-nudge.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+.chat-nudge-text { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; }
+.chat-nudge-close {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 22px; height: 22px;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-nudge-close:hover { color: var(--text); }
+
 @media (max-width: 640px) {
   /* Tightened so the app grid is reachable without a big scroll past
      title/search/filters/chat first — see the section-by-section notes
