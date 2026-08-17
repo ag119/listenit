@@ -144,6 +144,17 @@ button { font: inherit; }
 .brand-name-listen { color: var(--text); }
 .brand-name-it { color: var(--accent-2); }
 .header-actions { display: flex; align-items: center; gap: 10px; }
+#feedbackHeaderBtn { position: relative; }
+.feedback-unread-dot {
+  display: none;
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  border: 1.5px solid var(--bg-elev);
+}
+#feedbackHeaderBtn.has-unread .feedback-unread-dot { display: block; }
 
 /* ===== Hero ===== */
 .hero {

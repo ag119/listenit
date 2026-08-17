@@ -1236,12 +1236,21 @@
     lockBodyScroll();
     loadSiteRating();
     loadFeedbackList();
+    feedbackHeaderBtn.classList.remove("has-unread");
+    localStorage.setItem("listenit_feedback_seen", "1");
     LI.trackEvent("feedback_modal_open", {});
   }
   function closeFeedbackModal() {
     feedbackModal.classList.add("hidden");
     unlockBodyScroll();
   }
+  // Footer link is the low-key entry point; the header button (sticky —
+  // visible at any scroll position, unlike the footer) is the one meant to
+  // actually get noticed, so it carries a one-time attention dot until
+  // someone opens the modal for the first time from either place.
+  const feedbackHeaderBtn = document.getElementById("feedbackHeaderBtn");
+  if (!localStorage.getItem("listenit_feedback_seen")) feedbackHeaderBtn.classList.add("has-unread");
+  feedbackHeaderBtn.addEventListener("click", openFeedbackModal);
   document.getElementById("footerFeedbackBtn").addEventListener("click", openFeedbackModal);
   feedbackClose.addEventListener("click", closeFeedbackModal);
   feedbackBackdrop.addEventListener("click", closeFeedbackModal);
