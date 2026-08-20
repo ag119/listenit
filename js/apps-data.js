@@ -75,6 +75,36 @@ const APPS = [
     embeddable: true,
     addedAt: "2026-08-14"
   },
+  {
+    id: "oldmonk",
+    name: "Old Monk",
+    url: "https://oldmonk.vercel.app",
+    domain: "oldmonk.vercel.app",
+    tagline: "An 80s & 90s Bollywood playlist for daaru nights with friends — old is gold, on repeat.",
+    category: "Ambient Radio",
+    embeddable: true,
+    addedAt: "2026-08-21"
+  },
+  {
+    id: "loha-lakkad",
+    name: "Loha Lakkad",
+    url: "https://lohalakkad.in",
+    domain: "lohalakkad.in",
+    tagline: "Mohalle ke gym se seedha speaker tak — local gym ke gaane, loha utha, volume badha.",
+    category: "Ambient Radio",
+    embeddable: true,
+    addedAt: "2026-08-21"
+  },
+  {
+    id: "dard-e-ishq",
+    name: "Songs That Sound Like You",
+    url: "https://dardeishq.online",
+    domain: "dardeishq.online",
+    tagline: "Dard-e-Ishq — every song here carries a little more than music.",
+    category: "Ambient Radio",
+    embeddable: false,
+    addedAt: "2026-08-21"
+  },
 
   /* ---------------- Shops & Street Corners ---------------- */
   {
@@ -153,6 +183,16 @@ const APPS = [
     thumbnail: "thumbnails/cyber-cafe-2000s.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
+  },
+  {
+    id: "chai-tapri-radio",
+    name: "Chai Tapri Radio",
+    url: "https://chaikitapri.fun",
+    domain: "chaikitapri.fun",
+    tagline: "Ek chai, ek gaana, ek kahaani — a cup of chai and a little quiet, sometimes that's enough.",
+    category: "Shops & Street Corners",
+    embeddable: true,
+    addedAt: "2026-08-21"
   },
 
   /* ---------------- Transit & Travel ---------------- */
@@ -288,6 +328,36 @@ const APPS = [
     embeddable: true,
     addedAt: "2026-08-14"
   },
+  {
+    id: "auto-wala-indore",
+    name: "Auto Wala Indore",
+    url: "https://autowala.fun",
+    domain: "autowala.fun",
+    tagline: "An Indore auto stand outside Rajwada — press horn ok please, read the shayari on the back.",
+    category: "Transit & Travel",
+    embeddable: true,
+    addedAt: "2026-08-21"
+  },
+  {
+    id: "truck-wala",
+    name: "Truck Wala",
+    url: "https://hornokplease.xyz",
+    domain: "hornokplease.xyz",
+    tagline: "Horn OK Please — the highway shayari and songs painted on the back of an Indian truck.",
+    category: "Transit & Travel",
+    embeddable: false,
+    addedAt: "2026-08-21"
+  },
+  {
+    id: "kaundishamein",
+    name: "Do Musafir",
+    url: "https://www.kaundishamei.me",
+    domain: "kaundishamei.me",
+    tagline: "One boat, an ocean full of songs — lahar aane do, kashti chalao.",
+    category: "Transit & Travel",
+    embeddable: true,
+    addedAt: "2026-08-21"
+  },
 
   /* ---------------- Regional & Folk ---------------- */
   {
@@ -355,6 +425,16 @@ const APPS = [
     thumbnail: "thumbnails/ekant-raag.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
+  },
+  {
+    id: "gaun-ki-khud",
+    name: "Gaun Ki Khud",
+    url: "https://gaun-ki-khud.vercel.app",
+    domain: "gaun-ki-khud.vercel.app",
+    tagline: "Built for the mountains — Garhwali and Kumaoni folk from a sunset village in the hills.",
+    category: "Regional & Folk",
+    embeddable: true,
+    addedAt: "2026-08-21"
   },
 
   /* ---------------- Beyond India ---------------- */
@@ -426,6 +506,16 @@ const APPS = [
     embeddable: true,
     addedAt: "2026-08-14"
   },
+  {
+    id: "raju-mistri",
+    name: "Raju Mistri Playlist",
+    url: "https://raju-mistri-playlist.pages.dev",
+    domain: "raju-mistri-playlist.pages.dev",
+    tagline: "Old Bollywood romance for a mason's workday, one brick and one song at a time.",
+    category: "Work & Trade",
+    embeddable: true,
+    addedAt: "2026-08-21"
+  },
 
   /* ---------------- Festival & Occasions ---------------- */
   {
@@ -460,6 +550,16 @@ const APPS = [
     thumbnail: "thumbnails/azaadi.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
+  },
+  {
+    id: "mandir-radio",
+    name: "Mandir Radio",
+    url: "https://mandir-radio.vercel.app",
+    domain: "mandir-radio.vercel.app",
+    tagline: "Bhajan, kirtan, aarti — 24×7. Touch anywhere and the bhajan begins.",
+    category: "Festival & Occasions",
+    embeddable: true,
+    addedAt: "2026-08-21"
   }
 ];
 
