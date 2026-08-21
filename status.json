@@ -1,305 +1,305 @@
 {
-  "generatedAt": "2026-08-21T07:23:58.027Z",
+  "generatedAt": "2026-08-21T08:03:29.842Z",
   "apps": {
     "corporatesucks": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:45.955Z"
+      "checkedAt": "2026-08-21T08:03:17.775Z"
     },
     "nostalgia-cassette": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.001Z"
+      "checkedAt": "2026-08-21T08:03:17.819Z"
     },
     "royal-fitness": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.002Z"
+      "checkedAt": "2026-08-21T08:03:17.820Z"
     },
     "bakwas-band-kar": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.003Z"
+      "checkedAt": "2026-08-21T08:03:17.821Z"
     },
     "rs-world-90s": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.004Z"
+      "checkedAt": "2026-08-21T08:03:17.821Z"
     },
     "theka": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.005Z"
+      "checkedAt": "2026-08-21T08:03:17.822Z"
     },
     "oldmonk": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.005Z"
+      "checkedAt": "2026-08-21T08:03:17.823Z"
     },
     "loha-lakkad": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.006Z"
+      "checkedAt": "2026-08-21T08:03:17.823Z"
     },
     "dard-e-ishq": {
-      "up": true,
-      "statusCode": 200,
-      "error": null,
-      "checkedAt": "2026-08-21T07:23:46.007Z"
+      "up": false,
+      "statusCode": null,
+      "error": "timeout",
+      "checkedAt": "2026-08-21T08:03:17.824Z"
     },
     "deluxesalon": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.008Z"
+      "checkedAt": "2026-08-21T08:03:17.825Z"
     },
     "chai-tapri": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.009Z"
+      "checkedAt": "2026-08-21T08:03:17.826Z"
     },
     "pan-wala": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.009Z"
+      "checkedAt": "2026-08-21T08:03:17.826Z"
     },
     "thenisai-saloon": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.010Z"
+      "checkedAt": "2026-08-21T08:03:17.827Z"
     },
     "yaaron-ki-mehfil": {
       "up": false,
       "statusCode": 404,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.011Z"
+      "checkedAt": "2026-08-21T08:03:17.828Z"
     },
     "tapri-fm": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.011Z"
+      "checkedAt": "2026-08-21T08:03:17.828Z"
     },
     "cyber-cafe-2000s": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.012Z"
+      "checkedAt": "2026-08-21T08:03:17.829Z"
     },
     "chai-tapri-radio": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.013Z"
+      "checkedAt": "2026-08-21T08:03:17.830Z"
     },
     "busdriver": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.013Z"
+      "checkedAt": "2026-08-21T08:03:17.830Z"
     },
     "rickshaw-wala": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.014Z"
+      "checkedAt": "2026-08-21T08:03:17.831Z"
     },
     "rickshaw-radio": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.015Z"
+      "checkedAt": "2026-08-21T08:03:17.832Z"
     },
     "truckplaylist": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.015Z"
+      "checkedAt": "2026-08-21T08:03:17.832Z"
     },
     "safar": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.016Z"
+      "checkedAt": "2026-08-21T08:03:17.833Z"
     },
     "indian-truck-bangers": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.017Z"
+      "checkedAt": "2026-08-21T08:03:17.833Z"
     },
     "up-roadways": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.017Z"
+      "checkedAt": "2026-08-21T08:03:17.834Z"
     },
     "malwa-express": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.018Z"
+      "checkedAt": "2026-08-21T08:03:17.835Z"
     },
     "auto-waala": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.019Z"
+      "checkedAt": "2026-08-21T08:03:17.835Z"
     },
     "rikshawalo": {
-      "up": true,
-      "statusCode": 200,
-      "error": null,
-      "checkedAt": "2026-08-21T07:23:46.019Z"
+      "up": false,
+      "statusCode": null,
+      "error": "fetch failed",
+      "checkedAt": "2026-08-21T08:03:17.836Z"
     },
     "hyd-auto": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.020Z"
+      "checkedAt": "2026-08-21T08:03:17.836Z"
     },
     "autowala-lucknow": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.020Z"
+      "checkedAt": "2026-08-21T08:03:17.837Z"
     },
     "auto-wala-indore": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.021Z"
+      "checkedAt": "2026-08-21T08:03:17.837Z"
     },
     "truck-wala": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.021Z"
+      "checkedAt": "2026-08-21T08:03:17.838Z"
     },
     "kaundishamein": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.022Z"
+      "checkedAt": "2026-08-21T08:03:17.838Z"
     },
     "mehfil": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.022Z"
+      "checkedAt": "2026-08-21T08:03:17.838Z"
     },
     "kudimagan": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.023Z"
+      "checkedAt": "2026-08-21T08:03:17.839Z"
     },
     "garba-navratri": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.023Z"
+      "checkedAt": "2026-08-21T08:03:17.839Z"
     },
     "rajasthani-folk": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.024Z"
+      "checkedAt": "2026-08-21T08:03:17.840Z"
     },
     "bangla-bangers": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.024Z"
+      "checkedAt": "2026-08-21T08:03:17.840Z"
     },
     "ekant-raag": {
       "up": false,
       "statusCode": null,
       "error": "timeout",
-      "checkedAt": "2026-08-21T07:23:46.024Z"
+      "checkedAt": "2026-08-21T08:03:17.841Z"
     },
     "gaun-ki-khud": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.025Z"
+      "checkedAt": "2026-08-21T08:03:17.841Z"
     },
     "places-have-sound": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.026Z"
+      "checkedAt": "2026-08-21T08:03:17.842Z"
     },
     "kassita": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.026Z"
+      "checkedAt": "2026-08-21T08:03:17.842Z"
     },
     "master-jiii": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.027Z"
+      "checkedAt": "2026-08-21T08:03:17.843Z"
     },
     "munna-mistri": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.028Z"
+      "checkedAt": "2026-08-21T08:03:17.844Z"
     },
     "mazdoor-club": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.028Z"
+      "checkedAt": "2026-08-21T08:03:17.844Z"
     },
     "dhobi-ghat": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.029Z"
+      "checkedAt": "2026-08-21T08:03:17.845Z"
     },
     "raju-mistri": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.029Z"
+      "checkedAt": "2026-08-21T08:03:17.845Z"
     },
     "chhath-vibes": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.030Z"
+      "checkedAt": "2026-08-21T08:03:17.845Z"
     },
     "ganpati-utsav": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.030Z"
+      "checkedAt": "2026-08-21T08:03:17.846Z"
     },
     "azaadi": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.030Z"
+      "checkedAt": "2026-08-21T08:03:17.846Z"
     },
     "mandir-radio": {
       "up": true,
       "statusCode": 200,
       "error": null,
-      "checkedAt": "2026-08-21T07:23:46.031Z"
+      "checkedAt": "2026-08-21T08:03:17.847Z"
     }
   }
 }
