@@ -101,8 +101,180 @@
     const sorted = sortedListings();
     return sorted.filter((l) => l.bidAmount >= amount).length + 1;
   }
+  // The actual current rank of an already-listed id (not a hypothetical bid).
+  function rankOf(id) {
+    const idx = sortedListings().findIndex((l) => l.id === id);
+    return idx === -1 ? null : idx + 1;
+  }
 
   const platformIcon = { Instagram: "📷", YouTube: "▶️", "X / Twitter": "𝕏", Facebook: "📘", Other: "🔗" };
+
+  /* ---------------- "Your entries" — remembered locally, not an account -----------
+   * There's no login on this site, so "which entries are mine" only ever
+   * means "which ones did I submit from this browser" — tracked here, not
+   * a source of truth for anything security-relevant (submitting is
+   * already keyed by platform+handle regardless of who's asking, see
+   * firestore.rules). This is purely a courtesy so a returning visitor
+   * sees their own status and doesn't wonder whether their earlier
+   * submission accidentally created a duplicate.
+   */
+  const MY_LISTINGS_KEY = "listenit_my_listings";
+  function getMyListings() {
+    try { return JSON.parse(localStorage.getItem(MY_LISTINGS_KEY)) || []; } catch { return []; }
+  }
+  function saveMyListing(entry) {
+    const all = getMyListings();
+    const idx = all.findIndex((e) => e.key === entry.key);
+    if (idx >= 0) all[idx] = entry; else all.push(entry);
+    localStorage.setItem(MY_LISTINGS_KEY, JSON.stringify(all));
+  }
+
+  function renderMyEntries() {
+    const section = document.getElementById("myEntriesSection");
+    const list = document.getElementById("myEntriesList");
+    const mine = getMyListings();
+    if (!mine.length) { section.classList.add("hidden"); return; }
+    section.classList.remove("hidden");
+    list.innerHTML = "";
+
+    mine.forEach((entry) => {
+      const live = LISTINGS.find((l) => l.id === entry.key);
+      const row = document.createElement("div");
+      row.className = "my-entry-row";
+
+      const info = document.createElement("div");
+      info.className = "my-entry-info";
+      const platformSpan = document.createElement("strong");
+      platformSpan.textContent = (platformIcon[entry.platform] || "🔗") + " " + entry.platform;
+      info.appendChild(platformSpan);
+      const handleSpan = document.createElement("span");
+      handleSpan.className = "my-entry-handle";
+      handleSpan.textContent = entry.handle;
+      info.appendChild(handleSpan);
+      const statusSpan = document.createElement("span");
+      if (live) {
+        statusSpan.className = "my-entry-status status-live";
+        statusSpan.textContent = `✅ Live — Rank #${rankOf(live.id)}, ${formatRupees(live.bidAmount)}`;
+      } else {
+        statusSpan.className = "my-entry-status status-pending";
+        statusSpan.textContent = "⏳ Pending review";
+      }
+      info.appendChild(statusSpan);
+      row.appendChild(info);
+
+      const shareBtn = document.createElement("button");
+      shareBtn.type = "button";
+      shareBtn.className = "btn btn-secondary";
+      shareBtn.textContent = "📤 Share";
+      shareBtn.addEventListener("click", () => {
+        if (live) shareEntry({ displayName: live.displayName, platform: live.platform, handle: live.handle, bidAmount: live.bidAmount, rank: rankOf(live.id) });
+        else shareEntry({ displayName: entry.displayName, platform: entry.platform, handle: entry.handle, bidAmount: entry.bidAmount, pending: true });
+      });
+      row.appendChild(shareBtn);
+
+      list.appendChild(row);
+    });
+  }
+
+  /* ---------------- Shareable card ----------------
+   * Rendered entirely client-side with Canvas — no backend, no image
+   * hosting. Uses the Web Share API with a real file where that's
+   * supported (Android Chrome, iOS Safari 16.4+) so it drops straight
+   * into WhatsApp/Instagram's native share sheet; falls back to
+   * downloading the PNG plus opening a WhatsApp share with the text,
+   * since most desktop browsers can't share files at all.
+   */
+  function truncateText(s, max) {
+    return s.length > max ? s.slice(0, max - 1) + "…" : s;
+  }
+
+  function buildShareCanvas(entry) {
+    const W = 1080, H = 1080;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, "#7c3aed");
+    grad.addColorStop(1, "#ec4899");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.82)";
+    ctx.font = "700 34px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText("🎧 LISTENIT LEADERBOARD", W / 2, 140);
+
+    ctx.fillStyle = "#ffffff";
+    if (entry.pending) {
+      ctx.font = "800 52px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("I JUST BID", W / 2, 330);
+      ctx.font = "900 150px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(formatRupees(entry.bidAmount), W / 2, 490);
+    } else {
+      ctx.font = "800 52px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("RANKED", W / 2, 330);
+      ctx.font = "900 190px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("#" + entry.rank, W / 2, 510);
+    }
+
+    ctx.font = "700 46px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText(truncateText(entry.displayName || "Someone", 22), W / 2, entry.pending ? 600 : 630);
+
+    ctx.font = "500 32px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(`${platformIcon[entry.platform] || "🔗"} ${entry.platform} · ${truncateText(entry.handle || "", 24)}`, W / 2, entry.pending ? 655 : 685);
+
+    if (!entry.pending) {
+      ctx.font = "600 30px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(`${formatRupees(entry.bidAmount)} bid`, W / 2, 735);
+    }
+
+    ctx.font = "700 30px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("List your page too 👉 listenit.in/promote.html", W / 2, H - 90);
+
+    return canvas;
+  }
+
+  async function shareEntry(entry) {
+    const canvas = buildShareCanvas(entry);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) { showToast("Couldn't generate the image — try again"); return; }
+
+    const shareText = entry.pending
+      ? `I just bid ${formatRupees(entry.bidAmount)} on ListenIt's leaderboard! 🏆`
+      : `I'm ranked #${entry.rank} on ListenIt's leaderboard! 🏆`;
+    const fileName = "listenit-leaderboard.png";
+
+    let file = null;
+    try { file = new File([blob], fileName, { type: "image/png" }); } catch (e) { /* File constructor unsupported — fall through */ }
+
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "ListenIt Leaderboard", text: shareText + "\nhttps://listenit.in/promote.html" });
+        LI.trackEvent("share_listing", { pending: !!entry.pending });
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return; // explicit cancel — don't nag with a fallback
+      }
+    }
+
+    // Fallback: download the image, then open WhatsApp with the caption —
+    // no way to attach a file to a wa.me link, so they attach it by hand.
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    showToast("Image downloaded — attach it when you share!");
+    const waText = encodeURIComponent(shareText + "\nhttps://listenit.in/promote.html");
+    window.open(`https://wa.me/?text=${waText}`, "_blank", "noopener");
+    LI.trackEvent("share_listing_fallback", { pending: !!entry.pending });
+  }
 
   function renderLeaderboard() {
     const listEl = document.getElementById("leaderboardList");
@@ -174,12 +346,21 @@
       bid.className = "leaderboard-bid";
       bid.textContent = formatRupees(l.bidAmount);
       actions.appendChild(bid);
+      const links = document.createElement("div");
+      links.className = "leaderboard-row-links";
       const boostBtn = document.createElement("button");
       boostBtn.type = "button";
       boostBtn.className = "leaderboard-boost-btn";
       boostBtn.textContent = "⬆ Boost";
       boostBtn.addEventListener("click", () => prefillForTopUp(l));
-      actions.appendChild(boostBtn);
+      links.appendChild(boostBtn);
+      const shareBtn = document.createElement("button");
+      shareBtn.type = "button";
+      shareBtn.className = "leaderboard-share-btn";
+      shareBtn.textContent = "📤 Share";
+      shareBtn.addEventListener("click", () => shareEntry({ displayName: l.displayName, platform: l.platform, handle: l.handle, bidAmount: l.bidAmount, rank }));
+      links.appendChild(shareBtn);
+      actions.appendChild(links);
       row.appendChild(actions);
 
       listEl.appendChild(row);
@@ -234,6 +415,7 @@
     LISTINGS = await LI.getSocialListings();
     renderLeaderboard();
     renderActivity();
+    renderMyEntries();
     updateBidPreview();
   }
 
@@ -266,6 +448,15 @@
       topUpNotice.textContent = `You're already listed at ${formatRupees(matchedListing.bidAmount)} — this will update that listing instead of creating a new one. Your new bid needs to be higher than ${formatRupees(matchedListing.bidAmount)}.`;
       if (bidMode === "amount" && Number(lfBidAmount.value) <= matchedListing.bidAmount) {
         lfBidAmount.value = matchedListing.bidAmount + 1;
+      }
+    } else if (lfHandle.value.trim()) {
+      const key = listingKey(lfPlatform.value, lfHandle.value);
+      const myPending = getMyListings().find((e) => e.key === key);
+      if (myPending) {
+        topUpNotice.classList.remove("hidden");
+        topUpNotice.textContent = `You already have a pending entry for this account (submitted ${timeAgo(myPending.submittedAt)}) — submitting again updates that request instead of creating a duplicate.`;
+      } else {
+        topUpNotice.classList.add("hidden");
       }
     } else {
       topUpNotice.classList.add("hidden");
@@ -371,6 +562,9 @@
 
     LI.trackEvent("submit_social_listing", { platform: data.platform, bid_amount: bidAmount, is_topup: !!matchedListing });
 
+    saveMyListing({ key, platform: data.platform, handle: data.handle, displayName: data.displayName, bidAmount, submittedAt: Date.now() });
+    renderMyEntries();
+
     // Success — leave the button disabled and swap the form out for the
     // confirmation, rather than re-enabling it: that's what let a few
     // impatient re-clicks pile up duplicate entries before this fix.
@@ -381,6 +575,7 @@
       `Hi! I just submitted a ListenIt leaderboard entry.\n\nEntry ID: ${id}\nName: ${data.displayName}\nPlatform: ${data.platform}\nHandle: ${data.handle}\nBid: ${formatRupees(bidAmount)}\n\nSending the payment screenshot now.`
     );
     document.getElementById("paymentWhatsAppBtn").href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waText}`;
+    document.getElementById("shareSubmissionBtn").onclick = () => shareEntry({ displayName: data.displayName, platform: data.platform, handle: data.handle, bidAmount, pending: true });
     paymentPanel.classList.remove("hidden");
     paymentPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   });
@@ -394,4 +589,5 @@
   });
 
   updateBidPreview();
+  renderMyEntries(); // shows immediately from localStorage; loadLeaderboard() refines live/pending status once data arrives
 })();
