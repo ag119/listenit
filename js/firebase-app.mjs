@@ -218,6 +218,20 @@ async function init() {
       return [];
     }
   };
+  // Rejection notices — written by the local admin tool when a request is
+  // turned down (see firestore.rules). Public read, tiny collection, so the
+  // whole thing is fetched at once and matched client-side by id, same
+  // shape as getSocialListings above.
+  window.ListenIt.getSocialListingRejections = async () => {
+    try {
+      const snap = await getDocs(collection(db, "socialListingRejections"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
   window.ListenIt.submitSocialListingRequest = async (key, data) => {
     try {
       await setDoc(doc(db, "socialListingRequests", key), {

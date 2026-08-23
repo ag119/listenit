@@ -63,6 +63,7 @@
 
   /* ---------------- Leaderboard state ---------------- */
   let LISTINGS = [];
+  let REJECTIONS = [];
   let currentPage = 0;
 
   function sortedListings() {
@@ -138,6 +139,18 @@
     return getMyListings().some((e) => e.key === id);
   }
 
+  // A rejection only counts if it happened after this browser's *current*
+  // submission for that account — otherwise resubmitting a previously
+  // rejected entry would keep showing "Rejected" forever, since the old
+  // rejection doc never gets deleted (the client can't write to it).
+  function rejectionFor(entry) {
+    const r = REJECTIONS.find((x) => x.id === entry.key);
+    if (!r) return null;
+    const rejectedAtMs = r.rejectedAt && typeof r.rejectedAt.seconds === "number" ? r.rejectedAt.seconds * 1000 : 0;
+    if (!rejectedAtMs || rejectedAtMs <= (entry.submittedAt || 0)) return null;
+    return r;
+  }
+
   function renderMyEntries() {
     const section = document.getElementById("myEntriesSection");
     const list = document.getElementById("myEntriesList");
@@ -148,6 +161,7 @@
 
     mine.forEach((entry) => {
       const live = LISTINGS.find((l) => l.id === entry.key);
+      const rejection = live ? null : rejectionFor(entry);
       const row = document.createElement("div");
       row.className = "my-entry-row";
 
@@ -164,6 +178,9 @@
       if (live) {
         statusSpan.className = "my-entry-status status-live";
         statusSpan.textContent = `✅ Live — Rank #${rankOf(live.id)}, ${formatRupees(live.bidAmount)}`;
+      } else if (rejection) {
+        statusSpan.className = "my-entry-status status-rejected";
+        statusSpan.textContent = "❌ Rejected";
       } else {
         statusSpan.className = "my-entry-status status-pending";
         statusSpan.textContent = "⏳ Pending review";
@@ -171,15 +188,39 @@
       info.appendChild(statusSpan);
       row.appendChild(info);
 
-      const shareBtn = document.createElement("button");
-      shareBtn.type = "button";
-      shareBtn.className = "btn btn-secondary";
-      shareBtn.textContent = "📤 Share";
-      shareBtn.addEventListener("click", () => {
-        if (live) shareEntry({ displayName: live.displayName, platform: live.platform, handle: live.handle, bidAmount: live.bidAmount, rank: rankOf(live.id) });
-        else shareEntry({ displayName: entry.displayName, platform: entry.platform, handle: entry.handle, bidAmount: entry.bidAmount, pending: true });
-      });
-      row.appendChild(shareBtn);
+      if (rejection && rejection.reason) {
+        const reasonDiv = document.createElement("div");
+        reasonDiv.className = "my-entry-reason";
+        reasonDiv.textContent = "Reason: " + rejection.reason;
+        row.appendChild(reasonDiv);
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "my-entry-actions";
+
+      if (rejection) {
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "btn btn-secondary";
+        editBtn.textContent = "✏️ Edit & resubmit";
+        editBtn.addEventListener("click", () => prefillForEdit(entry));
+        actions.appendChild(editBtn);
+      }
+
+      // Skip the "I just bid ₹X" share for a rejected entry — that framing
+      // is misleading once it's been turned down and hasn't been resubmitted.
+      if (live || !rejection) {
+        const shareBtn = document.createElement("button");
+        shareBtn.type = "button";
+        shareBtn.className = "btn btn-secondary";
+        shareBtn.textContent = "📤 Share";
+        shareBtn.addEventListener("click", () => {
+          if (live) shareEntry({ displayName: live.displayName, platform: live.platform, handle: live.handle, bidAmount: live.bidAmount, rank: rankOf(live.id) });
+          else shareEntry({ displayName: entry.displayName, platform: entry.platform, handle: entry.handle, bidAmount: entry.bidAmount, pending: true });
+        });
+        actions.appendChild(shareBtn);
+      }
+      row.appendChild(actions);
 
       list.appendChild(row);
     });
@@ -427,6 +468,7 @@
 
   async function loadLeaderboard() {
     LISTINGS = await LI.getSocialListings();
+    REJECTIONS = await LI.getSocialListingRejections();
     renderLeaderboard();
     renderActivity();
     renderMyEntries();
@@ -530,7 +572,18 @@
   lfBidAmount.addEventListener("input", updateBidPreview);
   lfTargetRank.addEventListener("input", updateBidPreview);
 
+  // Undoes the permanent post-submit disable (see the submit handler below)
+  // so the form is usable again for a Boost or an Edit-and-resubmit.
+  function resetFormVisibility() {
+    listingForm.classList.remove("hidden");
+    paymentPanel.classList.add("hidden");
+    const submitBtn = listingForm.querySelector("button[type=submit]");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit entry";
+  }
+
   function prefillForTopUp(listing) {
+    resetFormVisibility();
     lfName.value = listing.displayName;
     lfPlatform.value = listing.platform;
     lfHandle.value = listing.handle;
@@ -539,6 +592,23 @@
     checkTopUp();
     setBidMode("amount");
     lfBidAmount.value = listing.bidAmount + 1;
+    updateBidPreview();
+    document.getElementById("promoteForm").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // A rejected entry isn't live anywhere, so there's no "must bid higher
+  // than X" floor — just bring back what they typed (name/platform/handle/
+  // url/tagline/bid) so they can fix whatever got it rejected and resend.
+  function prefillForEdit(entry) {
+    resetFormVisibility();
+    lfName.value = entry.displayName || "";
+    lfPlatform.value = entry.platform;
+    lfHandle.value = entry.handle;
+    lfUrl.value = entry.url || "";
+    lfTagline.value = entry.tagline || "";
+    setBidMode("amount");
+    lfBidAmount.value = Math.max(MIN_BID, entry.bidAmount || MIN_BID);
+    checkTopUp();
     updateBidPreview();
     document.getElementById("promoteForm").scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -596,7 +666,7 @@
 
     LI.trackEvent("submit_social_listing", { platform: data.platform, bid_amount: bidAmount, is_topup: !!matchedListing });
 
-    saveMyListing({ key, platform: data.platform, handle: data.handle, displayName: data.displayName, bidAmount, submittedAt: Date.now() });
+    saveMyListing({ key, platform: data.platform, handle: data.handle, displayName: data.displayName, url: data.url, tagline: data.tagline, bidAmount, submittedAt: Date.now() });
     renderMyEntries();
 
     // Success — leave the button disabled and swap the form out for the

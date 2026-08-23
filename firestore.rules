@@ -151,6 +151,19 @@ service cloud.firestore {
                     && request.resource.data.submittedAt == request.time;
     }
 
+    // Rejection notices for the promote.html board — written only by the
+    // local admin tool (Admin SDK, bypasses these rules) when a request is
+    // turned down, keyed by the same deterministic platform+handle id as
+    // `socialListingRequests`/`socialListings`. Public read so the
+    // submitter's own browser can show *why* without needing to read the
+    // (deliberately unreadable) pending queue itself; there's nothing
+    // sensitive in a rejection reason that isn't already implied by the
+    // account being publicly listed elsewhere.
+    match /socialListingRejections/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

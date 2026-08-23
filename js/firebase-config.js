@@ -48,5 +48,6 @@ window.ListenIt = {
   async getFeedback() { return []; },
   async voteFeedback() { return false; },
   async getSocialListings() { return []; },
+  async getSocialListingRejections() { return []; },
   async submitSocialListingRequest() { return null; }
 };
