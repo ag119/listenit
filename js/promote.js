@@ -72,9 +72,21 @@
     });
   }
 
+  // Deterministic key from platform+handle — used as the Firestore doc id
+  // for both socialListingRequests and (once approved) socialListings, so
+  // resubmitting the same account overwrites its own pending request
+  // instead of creating a duplicate, and the admin tool can tell "is this
+  // a top-up" just by checking whether this id already exists.
+  function listingKey(platform, handle) {
+    const p = platform.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const h = handle.trim().toLowerCase().replace(/^@/, "").replace(/[^a-z0-9]/g, "");
+    return `${p}_${h}`;
+  }
+
   function findExistingListing(platform, handle) {
-    const h = handle.trim().toLowerCase().replace(/^@/, "");
-    return LISTINGS.find((l) => l.platform === platform && l.handle.trim().toLowerCase().replace(/^@/, "") === h) || null;
+    if (!handle.trim()) return null;
+    const key = listingKey(platform, handle);
+    return LISTINGS.find((l) => l.id === key) || null;
   }
 
   // Minimum bid needed to occupy a given 1-indexed rank right now.
@@ -316,10 +328,17 @@
 
   listingForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const submitBtn = listingForm.querySelector("button[type=submit]");
+    if (submitBtn.disabled) return; // already submitting or already submitted — ignore a stray extra click
+
     const bidAmount = currentBidAmount();
 
     if (matchedListing && bidAmount <= matchedListing.bidAmount) {
       showToast(`Your bid needs to be higher than your current ${formatRupees(matchedListing.bidAmount)}`);
+      return;
+    }
+    if (!lfName.value.trim() || !lfHandle.value.trim()) {
+      showToast("Fill in your name and handle first");
       return;
     }
     if (!lfUrl.value.trim().startsWith("https://")) {
@@ -327,9 +346,10 @@
       return;
     }
 
-    const submitBtn = listingForm.querySelector("button[type=submit]");
     submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting…";
 
+    const key = listingKey(lfPlatform.value, lfHandle.value);
     const data = {
       displayName: lfName.value,
       platform: lfPlatform.value,
@@ -337,24 +357,28 @@
       url: lfUrl.value,
       tagline: lfTagline.value,
       bidAmount,
-      isTopUp: !!matchedListing,
-      targetListingId: matchedListing ? matchedListing.id : null,
       contactNote: ""
     };
 
-    const id = await LI.submitSocialListingRequest(data);
-    submitBtn.disabled = false;
+    const id = await LI.submitSocialListingRequest(key, data);
 
     if (!id) {
       showToast("Couldn't submit that — check your connection and try again");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit entry";
       return;
     }
 
-    LI.trackEvent("submit_social_listing", { platform: data.platform, bid_amount: bidAmount, is_topup: data.isTopUp });
+    LI.trackEvent("submit_social_listing", { platform: data.platform, bid_amount: bidAmount, is_topup: !!matchedListing });
 
+    // Success — leave the button disabled and swap the form out for the
+    // confirmation, rather than re-enabling it: that's what let a few
+    // impatient re-clicks pile up duplicate entries before this fix.
+    listingForm.classList.add("hidden");
+    document.getElementById("entryIdDisplay").textContent = id;
     document.getElementById("paymentAmount").textContent = formatRupees(bidAmount);
     const waText = encodeURIComponent(
-      `Hi! I just submitted a ListenIt leaderboard listing.\n\nName: ${data.displayName}\nPlatform: ${data.platform}\nHandle: ${data.handle}\nBid: ${formatRupees(bidAmount)}${data.isTopUp ? " (update to existing listing)" : ""}\n\nSending the payment screenshot now.`
+      `Hi! I just submitted a ListenIt leaderboard entry.\n\nEntry ID: ${id}\nName: ${data.displayName}\nPlatform: ${data.platform}\nHandle: ${data.handle}\nBid: ${formatRupees(bidAmount)}\n\nSending the payment screenshot now.`
     );
     document.getElementById("paymentWhatsAppBtn").href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waText}`;
     paymentPanel.classList.remove("hidden");
@@ -363,6 +387,10 @@
 
   document.getElementById("copyUpiBtn").addEventListener("click", () => {
     navigator.clipboard.writeText(UPI_ID).then(() => showToast("UPI ID copied")).catch(() => showToast(UPI_ID));
+  });
+  document.getElementById("copyEntryIdBtn").addEventListener("click", () => {
+    const id = document.getElementById("entryIdDisplay").textContent;
+    navigator.clipboard.writeText(id).then(() => showToast("Entry ID copied")).catch(() => showToast(id));
   });
 
   updateBidPreview();

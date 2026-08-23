@@ -27,7 +27,7 @@ function announce(ok) {
 
 async function init() {
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`);
-  const { getFirestore, doc, getDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } =
+  const { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } =
     await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`);
 
   const app = initializeApp(cfg);
@@ -197,9 +197,16 @@ async function init() {
    * Public leaderboard, ranked by bid amount — `socialListings` is
    * read-only from the client (every write happens through the local
    * admin tool, only after a payment is manually verified, see
-   * firestore.rules). Submitting a bid just files a request into
-   * `socialListingRequests`, which the client can create but never read
+   * firestore.rules). Submitting a bid files a request into
+   * `socialListingRequests`, which the client can write but never read
    * back — see firestore.rules for why.
+   *
+   * Both collections are keyed by a deterministic id derived from
+   * platform+handle (js/promote.js's listingKey()), not an auto-id.
+   * Resubmitting the same account overwrites its own pending request
+   * instead of creating a duplicate — the bug that motivated this was a
+   * real one: a client that briefly re-enabled its submit button let one
+   * person's impatient re-clicks pile up four identical requests.
    */
   window.ListenIt.getSocialListings = async () => {
     try {
@@ -211,21 +218,19 @@ async function init() {
       return [];
     }
   };
-  window.ListenIt.submitSocialListingRequest = async (data) => {
+  window.ListenIt.submitSocialListingRequest = async (key, data) => {
     try {
-      const ref = await addDoc(collection(db, "socialListingRequests"), {
+      await setDoc(doc(db, "socialListingRequests", key), {
         displayName: String(data.displayName || "").trim().slice(0, 40),
         platform: data.platform,
         handle: String(data.handle || "").trim().slice(0, 40),
         url: String(data.url || "").trim().slice(0, 200),
         tagline: String(data.tagline || "").trim().slice(0, 140),
         bidAmount: Math.round(Number(data.bidAmount)),
-        isTopUp: !!data.isTopUp,
-        targetListingId: data.targetListingId || null,
         contactNote: String(data.contactNote || "").trim().slice(0, 140),
         submittedAt: serverTimestamp()
       });
-      return ref.id;
+      return key;
     } catch (e) {
       return null;
     }

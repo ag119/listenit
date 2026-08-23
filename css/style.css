@@ -156,6 +156,34 @@ button { font: inherit; }
 }
 #feedbackHeaderBtn.has-unread .feedback-unread-dot { display: block; }
 
+/* ===== Promote banner ===== */
+.promote-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  text-align: center;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  text-decoration: none;
+  font-size: 13.5px;
+  transition: opacity .12s ease;
+}
+.promote-banner:hover { opacity: 0.92; }
+.promote-banner-text strong { font-weight: 800; }
+.promote-banner-cta {
+  font-weight: 700;
+  background: rgba(255,255,255,0.22);
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .promote-banner { padding: 10px 16px; font-size: 12.5px; }
+}
+
 /* ===== Hero ===== */
 .hero {
   padding: 56px 20px 28px;

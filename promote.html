@@ -136,12 +136,17 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block">Continue to payment →</button>
+        <button type="submit" class="btn btn-primary btn-block">Submit entry</button>
       </form>
 
       <div id="paymentPanel" class="payment-panel hidden">
-        <h3>💸 Pay to confirm your listing</h3>
-        <p class="promote-section-sub">Send <strong id="paymentAmount"></strong> via UPI, then tap the WhatsApp button below with a screenshot — your listing goes live once it's verified.</p>
+        <h3>✅ Entry submitted</h3>
+        <p class="promote-section-sub">Your entry ID is:</p>
+        <div class="upi-box">
+          <span id="entryIdDisplay"></span>
+          <button id="copyEntryIdBtn" class="btn btn-secondary" type="button">Copy</button>
+        </div>
+        <p class="promote-section-sub">Pay <strong id="paymentAmount"></strong> to the UPI ID below, then send a payment screenshot on WhatsApp <strong>with your entry ID</strong> — that's how it gets matched and confirmed.</p>
         <div class="upi-box">
           <span id="upiId">8853487447@ybl</span>
           <button id="copyUpiBtn" class="btn btn-secondary" type="button">Copy</button>
@@ -150,7 +155,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
           Send payment screenshot on WhatsApp
         </a>
-        <p class="form-note">Submitted — your entry is now pending review. It'll appear on the leaderboard once the payment's confirmed.</p>
+        <p class="form-note">Once the payment's confirmed, your entry goes live on the leaderboard — usually within a day.</p>
       </div>
     </div>
   </section>

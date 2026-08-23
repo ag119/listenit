@@ -142,3 +142,4 @@
   font-weight: 700;
   font-size: 14.5px;
 }
+#entryIdDisplay { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent-2); letter-spacing: 0.02em; word-break: break-all; }

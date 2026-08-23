@@ -117,17 +117,21 @@ service cloud.firestore {
     }
 
     // `socialListingRequests` is the pending queue a bid submission lands
-    // in first. Deliberately create-only and unreadable from the client:
-    // unreadable so nobody can see (or scrape) other people's pending bid
-    // amounts/contact notes before the admin reviews them, and immutable
-    // once created so a submission can't be edited after the fact. The
-    // admin tool (Admin SDK, local-only, never deployed) is the only thing
-    // that ever reads this collection; approving or rejecting a request
+    // in first, keyed by a deterministic id derived from platform+handle
+    // (js/promote.js's listingKey()) rather than an auto-id — so
+    // resubmitting the same account overwrites its own pending request
+    // instead of piling up duplicates (a real bug hit in practice: a
+    // client that briefly re-enabled its submit button let a handful of
+    // impatient re-clicks create four identical requests). Unreadable
+    // from the client so nobody can see or scrape other people's pending
+    // bid amounts/contact notes before the admin reviews them — the admin
+    // tool (Admin SDK, local-only, never deployed) is the only thing that
+    // ever reads this collection. Approving or rejecting a request
     // deletes it from here (approving also writes the result into
     // `socialListings`), so "still present" always means "still pending."
     match /socialListingRequests/{requestId} {
-      allow read, update, delete: if false;
-      allow create: if request.resource.data.displayName is string
+      allow read, delete: if false;
+      allow create, update: if request.resource.data.displayName is string
                     && request.resource.data.displayName.size() > 0
                     && request.resource.data.displayName.size() <= 40
                     && request.resource.data.platform in ['Instagram', 'YouTube', 'X / Twitter', 'Facebook', 'Other']
@@ -142,8 +146,6 @@ service cloud.firestore {
                     && request.resource.data.bidAmount is int
                     && request.resource.data.bidAmount >= 100
                     && request.resource.data.bidAmount <= 1000000
-                    && request.resource.data.isTopUp is bool
-                    && (request.resource.data.targetListingId == null || request.resource.data.targetListingId is string)
                     && request.resource.data.contactNote is string
                     && request.resource.data.contactNote.size() <= 140
                     && request.resource.data.submittedAt == request.time;
