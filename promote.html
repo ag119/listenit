@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Promote your page — ListenIt</title>
+<meta name="description" content="List your social media account on ListenIt's ranked leaderboard — rank is decided by bid amount, starting at ₹100." />
+<meta name="robots" content="noindex" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#7c3aed" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="color-scheme" content="dark light" />
+
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/promote.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="brand" aria-label="ListenIt home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+          <rect x="6.4" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="10.8" y="2.5" width="2.6" height="19" rx="1.3" fill="currentColor"/>
+          <rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="19.6" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand-name"><span class="brand-name-listen">Listen</span><span class="brand-name-it">It</span></span>
+    </a>
+    <div class="header-actions">
+      <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Toggle dark / light theme" title="Toggle theme">
+        <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" class="hidden"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="promote-main">
+
+  <section class="promote-hero">
+    <div class="promote-hero-inner">
+      <h1>🏆 Promote your page</h1>
+      <p class="promote-hero-sub">List your social media account here, ranked by bid amount. Higher bid, higher rank — ties go to whoever got there first. Starting bid is <strong>₹100</strong>.</p>
+      <a href="#promoteForm" class="btn btn-primary">List your account</a>
+    </div>
+  </section>
+
+  <section class="promote-section">
+    <div class="promote-section-inner">
+      <div class="promote-section-header">
+        <h2>Leaderboard</h2>
+        <p id="leaderboardCount" class="promote-section-sub"></p>
+      </div>
+      <div id="leaderboardList" class="leaderboard-list"><p class="promote-empty">Loading…</p></div>
+      <div id="leaderboardPager" class="leaderboard-pager hidden">
+        <button id="pagerPrev" class="btn btn-secondary" type="button">← Prev</button>
+        <span id="pagerLabel" class="pager-label"></span>
+        <button id="pagerNext" class="btn btn-secondary" type="button">Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="promote-section">
+    <div class="promote-section-inner">
+      <h2>Recent activity</h2>
+      <div id="activityList" class="activity-list"><p class="promote-empty">No activity yet.</p></div>
+    </div>
+  </section>
+
+  <section id="promoteForm" class="promote-section promote-form-section">
+    <div class="promote-section-inner">
+      <h2>List your account</h2>
+      <p class="promote-section-sub">Fill this in, pick your bid, then pay on UPI — your listing goes live once the payment's confirmed (usually within a day).</p>
+
+      <form id="listingForm" class="listing-form">
+        <div class="listing-form-grid">
+          <label>
+            Your name / brand
+            <input id="lfName" type="text" maxlength="40" placeholder="e.g. Rohan Sharma" required />
+          </label>
+          <label>
+            Platform
+            <select id="lfPlatform" required>
+              <option value="Instagram">Instagram</option>
+              <option value="YouTube">YouTube</option>
+              <option value="X / Twitter">X / Twitter</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>
+            Handle
+            <input id="lfHandle" type="text" maxlength="40" placeholder="@yourhandle" required />
+          </label>
+          <label>
+            Profile URL
+            <input id="lfUrl" type="url" maxlength="200" placeholder="https://instagram.com/yourhandle" required />
+          </label>
+        </div>
+        <label>
+          Short tagline (optional)
+          <input id="lfTagline" type="text" maxlength="140" placeholder="One line about your page" />
+        </label>
+
+        <div id="topUpNotice" class="topup-notice hidden"></div>
+
+        <div class="bid-block">
+          <div class="bid-mode-toggle" role="group" aria-label="Choose bid mode">
+            <button type="button" id="bidModeAmount" class="bid-mode-btn active">I'll enter an amount</button>
+            <button type="button" id="bidModeRank" class="bid-mode-btn">I want a specific rank</button>
+          </div>
+
+          <div id="bidByAmount" class="bid-input-row">
+            <label>
+              Your bid (₹)
+              <input id="lfBidAmount" type="number" min="100" step="1" value="100" />
+            </label>
+            <p id="bidAmountPreview" class="bid-preview"></p>
+          </div>
+
+          <div id="bidByRank" class="bid-input-row hidden">
+            <label>
+              Target rank
+              <input id="lfTargetRank" type="number" min="1" step="1" value="1" />
+            </label>
+            <p id="bidRankPreview" class="bid-preview"></p>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Continue to payment →</button>
+      </form>
+
+      <div id="paymentPanel" class="payment-panel hidden">
+        <h3>💸 Pay to confirm your listing</h3>
+        <p class="promote-section-sub">Send <strong id="paymentAmount"></strong> via UPI, then tap the WhatsApp button below with a screenshot — your listing goes live once it's verified.</p>
+        <div class="upi-box">
+          <span id="upiId">8853487447@ybl</span>
+          <button id="copyUpiBtn" class="btn btn-secondary" type="button">Copy</button>
+        </div>
+        <a id="paymentWhatsAppBtn" class="btn btn-primary btn-block" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
+          Send payment screenshot on WhatsApp
+        </a>
+        <p class="form-note">Submitted — your entry is now pending review. It'll appear on the leaderboard once the payment's confirmed.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p><a href="/">← Back to ListenIt</a> · Built with ❤️ for the internet's odd corners.</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/promote.js"></script>
+<script type="module" src="js/firebase-app.mjs"></script>
+</body>
+</html>

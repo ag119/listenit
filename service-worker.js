@@ -1,4 +1,4 @@
-const CACHE_NAME = "listenit-v22";
+const CACHE_NAME = "listenit-v23";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -7,6 +7,9 @@ const APP_SHELL = [
   "/js/apps-data.js",
   "/js/firebase-config.js",
   "/js/firebase-app.mjs",
+  "/promote.html",
+  "/css/promote.css",
+  "/js/promote.js",
   "/manifest.webmanifest",
   "/offline.html",
   "/icons/icon-192.png",

@@ -8,3 +8,8 @@ serviceAccountKey.json
 
 # Per-machine local settings, not shared project config (that's launch.json).
 .claude/settings.local.json
+
+# Local-only admin tool for approving paid social listings (promote.html) —
+# reviews pending bids and decides which ones had a verified payment.
+# Deliberately never pushed: run it locally with `npm run admin-tool`.
+admin-tool/

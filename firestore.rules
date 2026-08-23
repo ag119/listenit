@@ -106,6 +106,49 @@ service cloud.firestore {
                       );
     }
 
+    // Paid-rank social listing board (see promote.html). Two collections:
+    // `socialListings` is the public leaderboard — clients only ever read
+    // it, every write comes from the local admin tool using the Admin SDK
+    // (bypasses these rules entirely, same as `apps`), only after a bid's
+    // payment has been manually verified.
+    match /socialListings/{listingId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // `socialListingRequests` is the pending queue a bid submission lands
+    // in first. Deliberately create-only and unreadable from the client:
+    // unreadable so nobody can see (or scrape) other people's pending bid
+    // amounts/contact notes before the admin reviews them, and immutable
+    // once created so a submission can't be edited after the fact. The
+    // admin tool (Admin SDK, local-only, never deployed) is the only thing
+    // that ever reads this collection; approving or rejecting a request
+    // deletes it from here (approving also writes the result into
+    // `socialListings`), so "still present" always means "still pending."
+    match /socialListingRequests/{requestId} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() > 0
+                    && request.resource.data.displayName.size() <= 40
+                    && request.resource.data.platform in ['Instagram', 'YouTube', 'X / Twitter', 'Facebook', 'Other']
+                    && request.resource.data.handle is string
+                    && request.resource.data.handle.size() > 0
+                    && request.resource.data.handle.size() <= 40
+                    && request.resource.data.url is string
+                    && request.resource.data.url.matches('^https://.+')
+                    && request.resource.data.url.size() <= 200
+                    && request.resource.data.tagline is string
+                    && request.resource.data.tagline.size() <= 140
+                    && request.resource.data.bidAmount is int
+                    && request.resource.data.bidAmount >= 100
+                    && request.resource.data.bidAmount <= 1000000
+                    && request.resource.data.isTopUp is bool
+                    && (request.resource.data.targetListingId == null || request.resource.data.targetListingId is string)
+                    && request.resource.data.contactNote is string
+                    && request.resource.data.contactNote.size() <= 140
+                    && request.resource.data.submittedAt == request.time;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

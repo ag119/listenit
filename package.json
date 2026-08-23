@@ -6,7 +6,8 @@
     "healthcheck": "node scripts/healthcheck.mjs",
     "seed-firebase": "node scripts/seed-firebase.mjs",
     "add-app": "node scripts/add-app.mjs",
-    "sync-apps": "node scripts/sync-apps.mjs"
+    "sync-apps": "node scripts/sync-apps.mjs",
+    "admin-tool": "node admin-tool/server.mjs"
   },
   "devDependencies": {
     "firebase-admin": "^12.3.1"

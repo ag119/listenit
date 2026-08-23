@@ -193,6 +193,44 @@ async function init() {
     }
   };
 
+  /* ---------------- Social listing board (promote.html) ----------------
+   * Public leaderboard, ranked by bid amount — `socialListings` is
+   * read-only from the client (every write happens through the local
+   * admin tool, only after a payment is manually verified, see
+   * firestore.rules). Submitting a bid just files a request into
+   * `socialListingRequests`, which the client can create but never read
+   * back — see firestore.rules for why.
+   */
+  window.ListenIt.getSocialListings = async () => {
+    try {
+      const snap = await getDocs(collection(db, "socialListings"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
+  window.ListenIt.submitSocialListingRequest = async (data) => {
+    try {
+      const ref = await addDoc(collection(db, "socialListingRequests"), {
+        displayName: String(data.displayName || "").trim().slice(0, 40),
+        platform: data.platform,
+        handle: String(data.handle || "").trim().slice(0, 40),
+        url: String(data.url || "").trim().slice(0, 200),
+        tagline: String(data.tagline || "").trim().slice(0, 140),
+        bidAmount: Math.round(Number(data.bidAmount)),
+        isTopUp: !!data.isTopUp,
+        targetListingId: data.targetListingId || null,
+        contactNote: String(data.contactNote || "").trim().slice(0, 140),
+        submittedAt: serverTimestamp()
+      });
+      return ref.id;
+    } catch (e) {
+      return null;
+    }
+  };
+
   /* ---------------- Live user count ---------------- */
   if (cfg.databaseURL) {
     try {
