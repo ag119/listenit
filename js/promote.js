@@ -128,6 +128,15 @@
     if (idx >= 0) all[idx] = entry; else all.push(entry);
     localStorage.setItem(MY_LISTINGS_KEY, JSON.stringify(all));
   }
+  // "Mine" only ever means "this browser submitted it" — there's no login
+  // to check against. Not cryptographic proof of ownership (someone could
+  // clear storage, or type a matching handle straight into the form on a
+  // different device), but it stops the obvious path — a stranger
+  // browsing the leaderboard clicking Boost on someone else's card — and
+  // the admin still reviews every request by hand before anything changes.
+  function isMine(id) {
+    return getMyListings().some((e) => e.key === id);
+  }
 
   function renderMyEntries() {
     const section = document.getElementById("myEntriesSection");
@@ -348,12 +357,17 @@
       actions.appendChild(bid);
       const links = document.createElement("div");
       links.className = "leaderboard-row-links";
-      const boostBtn = document.createElement("button");
-      boostBtn.type = "button";
-      boostBtn.className = "leaderboard-boost-btn";
-      boostBtn.textContent = "⬆ Boost";
-      boostBtn.addEventListener("click", () => prefillForTopUp(l));
-      links.appendChild(boostBtn);
+      // Only the browser that submitted an entry can boost it — anyone
+      // could see everyone's card, but Boost pre-fills a bid *for that
+      // account*, and only its owner should be able to start that flow.
+      if (isMine(l.id)) {
+        const boostBtn = document.createElement("button");
+        boostBtn.type = "button";
+        boostBtn.className = "leaderboard-boost-btn";
+        boostBtn.textContent = "⬆ Boost";
+        boostBtn.addEventListener("click", () => prefillForTopUp(l));
+        links.appendChild(boostBtn);
+      }
       const shareBtn = document.createElement("button");
       shareBtn.type = "button";
       shareBtn.className = "leaderboard-share-btn";
@@ -440,9 +454,24 @@
 
   let bidMode = "amount"; // "amount" | "rank"
   let matchedListing = null;
+  let blockedNotOwner = false;
 
   function checkTopUp() {
     matchedListing = findExistingListing(lfPlatform.value, lfHandle.value);
+    blockedNotOwner = !!(matchedListing && !isMine(matchedListing.id));
+    const submitBtn = listingForm.querySelector("button[type=submit]");
+
+    if (blockedNotOwner) {
+      topUpNotice.classList.remove("hidden");
+      topUpNotice.classList.add("topup-blocked");
+      topUpNotice.textContent = "This account is already listed by someone else — only the browser that submitted it can update its bid. If this is your account, please submit from that device, or reach out on WhatsApp.";
+      submitBtn.disabled = true;
+      updateBidPreview();
+      return;
+    }
+    topUpNotice.classList.remove("topup-blocked");
+    if (!listingForm.classList.contains("hidden")) submitBtn.disabled = false; // don't fight the post-submit permanent-disable
+
     if (matchedListing) {
       topUpNotice.classList.remove("hidden");
       topUpNotice.textContent = `You're already listed at ${formatRupees(matchedListing.bidAmount)} — this will update that listing instead of creating a new one. Your new bid needs to be higher than ${formatRupees(matchedListing.bidAmount)}.`;
@@ -520,7 +549,12 @@
   listingForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const submitBtn = listingForm.querySelector("button[type=submit]");
-    if (submitBtn.disabled) return; // already submitting or already submitted — ignore a stray extra click
+    if (submitBtn.disabled) return; // already submitting, already submitted, or blocked — ignore a stray extra click
+
+    if (blockedNotOwner) {
+      showToast("That account's already listed by someone else — only its own browser can update it.");
+      return;
+    }
 
     const bidAmount = currentBidAmount();
 

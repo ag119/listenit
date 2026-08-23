@@ -1,4 +1,4 @@
-const CACHE_NAME = "listenit-v25";
+const CACHE_NAME = "listenit-v26";
 const APP_SHELL = [
   "/",
   "/index.html",

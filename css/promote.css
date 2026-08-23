@@ -122,6 +122,10 @@
   font-size: 13px;
   color: var(--text);
 }
+.topup-notice.topup-blocked {
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg-elev-2));
+  border-color: var(--danger);
+}
 
 .bid-block { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 4px; }
 .bid-mode-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
