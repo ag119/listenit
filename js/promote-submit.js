@@ -2,7 +2,7 @@
   "use strict";
 
   const PS = window.PromoteShared;
-  const { LI, MIN_BID, WHATSAPP_NUMBER, UPI_ID, PLATFORM_URL, buildProfileUrl, urlMatchesPlatform,
+  const { LI, MIN_BID, MIN_BOOST_INCREMENT, WHATSAPP_NUMBER, UPI_ID, PLATFORM_URL, buildProfileUrl, urlMatchesPlatform,
     showToast, formatRupees, listingKey, getMyListings, saveMyListing, isMine,
     priceForRank, rankForPrice, findExistingListing, consumePrefill, shareEntry } = PS;
 
@@ -85,10 +85,11 @@
     if (!listingForm.classList.contains("hidden")) submitBtn.disabled = false; // don't fight the post-submit permanent-disable
 
     if (matchedListing) {
+      const minNext = matchedListing.bidAmount + MIN_BOOST_INCREMENT;
       topUpNotice.classList.remove("hidden");
-      topUpNotice.textContent = `You're already listed at ${formatRupees(matchedListing.bidAmount)} — this will update that listing instead of creating a new one. Your new bid needs to be higher than ${formatRupees(matchedListing.bidAmount)}.`;
-      if (bidMode === "amount" && Number(lfBidAmount.value) <= matchedListing.bidAmount) {
-        lfBidAmount.value = matchedListing.bidAmount + 1;
+      topUpNotice.textContent = `You're already listed at ${formatRupees(matchedListing.bidAmount)} — this will update that listing instead of creating a new one. Your new bid needs to be at least ${formatRupees(minNext)} (₹${MIN_BOOST_INCREMENT} more than your current bid).`;
+      if (bidMode === "amount" && Number(lfBidAmount.value) < minNext) {
+        lfBidAmount.value = minNext;
       }
     } else if (lfHandle.value.trim()) {
       const key = listingKey(lfPlatform.value, lfHandle.value);
@@ -168,9 +169,9 @@
       syncAutoUrl();
       checkTopUp();
       setBidMode("amount");
-      lfBidAmount.value = listing.bidAmount + 1;
+      lfBidAmount.value = listing.bidAmount + MIN_BOOST_INCREMENT;
       updateBidPreview();
-      showToast("Boosting your existing listing — pick a higher bid and submit");
+      showToast(`Boosting your existing listing — bid at least ₹${MIN_BOOST_INCREMENT} more and submit`);
     } else if (payload.mode === "edit") {
       // A rejected entry isn't live anywhere, so there's no "must bid
       // higher than X" floor — just bring back what they typed so they can
@@ -203,8 +204,8 @@
 
     const bidAmount = currentBidAmount();
 
-    if (matchedListing && bidAmount <= matchedListing.bidAmount) {
-      showToast(`Your bid needs to be higher than your current ${formatRupees(matchedListing.bidAmount)}`);
+    if (matchedListing && bidAmount < matchedListing.bidAmount + MIN_BOOST_INCREMENT) {
+      showToast(`Your bid needs to be at least ${formatRupees(matchedListing.bidAmount + MIN_BOOST_INCREMENT)} — ₹${MIN_BOOST_INCREMENT} more than your current bid`);
       return;
     }
     if (!lfName.value.trim() || !lfHandle.value.trim()) {

@@ -11,6 +11,10 @@
   const WHATSAPP_NUMBER = "918853487447";
   const UPI_ID = "8853487447@ybl";
   const MIN_BID = 100;
+  // Outranking an existing bid (yours or someone else's) needs at least
+  // this much more, not just ₹1 more — otherwise bidding wars would grind
+  // through single rupees instead of actually moving the board.
+  const MIN_BOOST_INCREMENT = 50;
 
   const LI = window.ListenIt || {
     trackEvent() {},
@@ -84,12 +88,14 @@
       return tsMillis(a.createdAt) - tsMillis(b.createdAt);
     });
   }
-  // Minimum bid needed to occupy a given 1-indexed rank right now.
+  // Minimum bid needed to occupy a given 1-indexed rank right now. Taking
+  // an occupied rank needs MIN_BOOST_INCREMENT over its current holder,
+  // not just ₹1 more.
   function priceForRank(listings, rank) {
     const sorted = sortedListings(listings);
     const holder = sorted[rank - 1];
     if (!holder) return MIN_BID;
-    return Math.max(MIN_BID, holder.bidAmount + 1);
+    return Math.max(MIN_BID, holder.bidAmount + MIN_BOOST_INCREMENT);
   }
   // Rank a given bid amount would land at right now (ties lose to existing entries — first-come-first-served).
   function rankForPrice(listings, amount) {
@@ -312,7 +318,7 @@
   initTheme();
 
   window.PromoteShared = {
-    WHATSAPP_NUMBER, UPI_ID, MIN_BID, LI, platformIcon, PLATFORM_URL,
+    WHATSAPP_NUMBER, UPI_ID, MIN_BID, MIN_BOOST_INCREMENT, LI, platformIcon, PLATFORM_URL,
     buildProfileUrl, urlMatchesPlatform,
     showToast, tsMillis, timeAgo, formatRupees, listingKey,
     sortedListings, priceForRank, rankForPrice, rankOf, findExistingListing,
