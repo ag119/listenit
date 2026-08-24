@@ -31,6 +31,7 @@
 <meta name="twitter:image" content="https://listenit.in/icons/og-cover.jpg" />
 
 <link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/amplify.css" />
 </head>
 <body>
 
@@ -91,6 +92,19 @@
       <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
 
       <p id="liveUsers" class="live-users hidden"><span class="live-dot" aria-hidden="true"></span><span id="liveUsersCount"></span></p>
+    </div>
+  </section>
+
+  <section id="amplifyHomeSection" class="amplify-home-section hidden">
+    <div class="amplify-home-inner">
+      <div class="amplify-home-header">
+        <h2>📢 Amplify</h2>
+        <a href="amplify-submit.html?mode=spotlight" class="link-btn">🔦 Get Spotlighted →</a>
+      </div>
+      <p class="amplify-home-sub">Every app carries a Decibel score — gift dB to turn one up, pay to turn one down. Highest dB wins the rank.</p>
+      <div id="homeSpotlightCarousel" class="spotlight-carousel"></div>
+      <div id="homeRankingsList" class="rankings-list rankings-list-compact"></div>
+      <a href="amplify.html" class="link-btn amplify-home-viewall">View full rankings →</a>
     </div>
   </section>
 
@@ -357,6 +371,8 @@
 
 <script src="js/apps-data.js"></script>
 <script src="js/firebase-config.js"></script>
+<script src="js/amplify-shared.js"></script>
+<script src="js/amplify-home.js"></script>
 <script src="js/app.js"></script>
 <script type="module" src="js/firebase-app.mjs"></script>
 </body>

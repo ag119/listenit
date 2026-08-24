@@ -262,6 +262,128 @@ async function init() {
     }
   };
 
+  /* ---------------- Amplify: paid app rankings (index.html + amplify.html) ----------------
+   * Same shape as the social listing board above — public read-only
+   * results (`appPoints`, `featuredApps`), an unreadable request queue
+   * the admin tool reviews by hand, and public rejection/activity logs.
+   * See firestore.rules for the full reasoning.
+   */
+  window.ListenIt.getAppPoints = async () => {
+    try {
+      const snap = await getDocs(collection(db, "appPoints"));
+      const out = {};
+      snap.forEach((d) => { out[d.id] = d.data().points || 0; });
+      return out;
+    } catch (e) {
+      return {};
+    }
+  };
+  window.ListenIt.getFeaturedApps = async () => {
+    try {
+      const snap = await getDocs(collection(db, "featuredApps"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
+  window.ListenIt.getAppPointActivity = async () => {
+    try {
+      const snap = await getDocs(collection(db, "appPointActivity"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
+  window.ListenIt.getAppPointRejections = async () => {
+    try {
+      const snap = await getDocs(collection(db, "appPointRejections"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
+  window.ListenIt.getFeaturedAppRejections = async () => {
+    try {
+      const snap = await getDocs(collection(db, "featuredAppRejections"));
+      const out = [];
+      snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+      return out;
+    } catch (e) {
+      return [];
+    }
+  };
+  // Admin-editable Spotlight/dB pricing — {featuredPricing: {...}, pointsPricing: {...}}.
+  window.ListenIt.getAmplifyConfig = async () => {
+    try {
+      const snap = await getDocs(collection(db, "config"));
+      const out = {};
+      snap.forEach((d) => { out[d.id] = d.data(); });
+      return out;
+    } catch (e) {
+      return {};
+    }
+  };
+  // A dB gift/dock — client-generated id (not deterministic like the
+  // social listing keys) since many different people boosting the same
+  // app over time is expected, not a duplicate to collapse.
+  window.ListenIt.submitAppPointRequest = async (data) => {
+    try {
+      const ref = doc(collection(db, "appPointRequests"));
+      await setDoc(ref, {
+        appId: data.appId,
+        appName: String(data.appName || "").trim().slice(0, 80),
+        direction: data.direction,
+        amount: Math.round(Number(data.amount)),
+        priceRupees: Math.round(Number(data.priceRupees)),
+        contactNote: String(data.contactNote || "").trim().slice(0, 140),
+        submittedAt: serverTimestamp()
+      });
+      return ref.id;
+    } catch (e) {
+      return null;
+    }
+  };
+  window.ListenIt.deleteAppPointRequest = async (id) => {
+    try {
+      await deleteDoc(doc(db, "appPointRequests", id));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+  // A Spotlight request, keyed by appId (like socialListingRequests) —
+  // resubmitting for the same app overwrites the pending request.
+  window.ListenIt.submitFeaturedAppRequest = async (appId, data) => {
+    try {
+      await setDoc(doc(db, "featuredAppRequests", appId), {
+        appId,
+        appName: String(data.appName || "").trim().slice(0, 80),
+        requestedRank: Math.round(Number(data.requestedRank)),
+        days: Math.round(Number(data.days)),
+        priceRupees: Math.round(Number(data.priceRupees)),
+        contactNote: String(data.contactNote || "").trim().slice(0, 140),
+        submittedAt: serverTimestamp()
+      });
+      return appId;
+    } catch (e) {
+      return null;
+    }
+  };
+  window.ListenIt.deleteFeaturedAppRequest = async (appId) => {
+    try {
+      await deleteDoc(doc(db, "featuredAppRequests", appId));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   /* ---------------- Live user count ---------------- */
   if (cfg.databaseURL) {
     try {

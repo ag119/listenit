@@ -1,0 +1,177 @@
+/* ===== Amplify homepage teaser (index.html) ===== */
+.amplify-home-section { max-width: 900px; margin: 0 auto 40px; padding: 0 20px; }
+.amplify-home-inner { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); padding: 20px; }
+.amplify-home-header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.amplify-home-header h2 { font-size: 18px; margin: 0; }
+.amplify-home-sub { color: var(--text-dim); font-size: 13px; margin: 4px 0 16px; }
+.amplify-home-viewall { display: block; text-align: center; margin-top: 12px; font-size: 13px; }
+.rankings-list-compact { display: flex; flex-direction: column; gap: 5px; }
+
+/* ===== Amplify pages ===== */
+.amplify-main { max-width: 780px; margin: 0 auto; padding: 0 20px 60px; }
+
+.back-link { display: inline-block; margin-top: 20px; font-size: 13.5px; color: var(--text-dim); text-decoration: none; }
+.back-link:hover { color: var(--accent); }
+
+.amplify-hero { text-align: center; padding: 48px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 36px; }
+.amplify-hero-compact { padding: 28px 0 24px; }
+.amplify-hero h1 { font-size: clamp(26px, 5vw, 36px); margin: 0 0 12px; }
+.amplify-hero-sub { color: var(--text-dim); font-size: 15px; line-height: 1.6; max-width: 540px; margin: 0 auto 20px; }
+.amplify-hero-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.amplify-section { margin-bottom: 44px; }
+.amplify-section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.amplify-section h2 { font-size: 20px; margin: 0 0 4px; }
+.amplify-section-sub { color: var(--text-dim); font-size: 13.5px; line-height: 1.5; margin: 0 0 16px; }
+.amplify-empty { color: var(--text-faint); font-size: 13.5px; text-align: center; padding: 24px 0; }
+.how-it-works { scroll-margin-top: calc(var(--header-h) + 16px); }
+
+/* Spotlight carousel */
+.spotlight-carousel { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+.spotlight-card {
+  scroll-snap-align: start;
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 14px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 14%, var(--bg-elev)), var(--bg-elev));
+  text-decoration: none;
+  color: var(--text);
+}
+.spotlight-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.spotlight-rank {
+  font-size: 11px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  padding: 2px 10px; border-radius: 999px;
+}
+.spotlight-card img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: var(--bg-elev-2); }
+.spotlight-name { font-weight: 700; font-size: 13px; line-height: 1.3; }
+.spotlight-category { font-size: 10.5px; color: var(--text-faint); }
+
+/* Rankings — compact vertical list, short rows so 7-8 fit without scrolling */
+.rankings-list { display: flex; flex-direction: column; gap: 6px; }
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+.rank-num {
+  flex-shrink: 0;
+  width: 26px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.rank-row.rank-1 .rank-num { color: #f59e0b; }
+.rank-row.rank-2 .rank-num { color: #94a3b8; }
+.rank-row.rank-3 .rank-num { color: #d97757; }
+.rank-thumb { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; background: var(--bg-elev-2); flex-shrink: 0; }
+.rank-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rank-name { font-weight: 700; font-size: 13px; color: var(--text); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-name:hover { color: var(--accent); }
+.rank-category { font-size: 10.5px; color: var(--text-faint); }
+.rank-db { font-weight: 700; font-size: 13px; color: var(--accent-2); white-space: nowrap; flex-shrink: 0; }
+.rank-actions { display: flex; gap: 4px; flex-shrink: 0; }
+@media (max-width: 420px) {
+  /* Narrow phones don't leave enough horizontal room next to the thumb,
+     dB figure, and two action buttons for the name to sit on one line
+     without being ellipsized down to a few letters — let it wrap onto a
+     second line instead, and drop the category label to keep the row
+     from growing too tall as a result. */
+  .rank-name { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; overflow-wrap: break-word; word-break: break-word; }
+  .rank-category { display: none; }
+  .rank-db { font-size: 12px; }
+  .rank-btn { width: 25px; height: 25px; }
+}
+.rank-btn {
+  border: 1px solid var(--border); background: var(--bg-elev-2); border-radius: 7px;
+  width: 28px; height: 28px; font-size: 13px; cursor: pointer; line-height: 1;
+}
+.rank-btn:hover { border-color: var(--accent); }
+
+.rankings-pager { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 18px; }
+.pager-label { font-size: 13px; color: var(--text-dim); }
+
+/* Activity feed */
+.activity-list { display: flex; flex-direction: column; gap: 8px; }
+.activity-item { display: flex; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg-elev-2); font-size: 13px; }
+.activity-item-text strong { color: var(--text); }
+.activity-item-time { color: var(--text-faint); font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+
+/* Your requests */
+.my-amplify-list { display: flex; flex-direction: column; gap: 8px; }
+.my-amplify-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+.my-amplify-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+.my-amplify-status { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.my-amplify-status.status-live { background: color-mix(in srgb, var(--success) 20%, transparent); color: var(--success); }
+.my-amplify-status.status-pending { background: var(--bg-elev-2); color: var(--text-dim); }
+.my-amplify-status.status-rejected { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+.my-amplify-reason { flex-basis: 100%; font-size: 12.5px; color: var(--text-dim); font-style: italic; }
+.my-amplify-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-danger-outline { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.btn-danger-outline:hover { border-color: var(--danger); }
+
+/* Mode toggle (points vs. spotlight) */
+.mode-toggle { display: flex; gap: 8px; margin-bottom: 28px; }
+.mode-toggle-btn {
+  flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--bg-elev-2); color: var(--text-dim); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.mode-toggle-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; color: #fff; }
+
+/* Forms (shared by points + Spotlight) */
+.amplify-form { display: flex; flex-direction: column; gap: 14px; }
+.amplify-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.amplify-form input, .amplify-form select {
+  border: 1px solid var(--border); background: var(--bg-elev-2); color: var(--text);
+  border-radius: var(--radius-sm); padding: 11px 13px; font-size: 14.5px; font-family: inherit; outline: none;
+}
+.amplify-form input:focus, .amplify-form select:focus { border-color: var(--accent); }
+.field-hint { font-weight: 500; font-size: 12px; color: var(--text-faint); margin: -6px 0 0; }
+
+.direction-toggle { display: flex; gap: 8px; }
+.direction-btn { flex: 1; padding: 11px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev-2); color: var(--text-dim); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.direction-btn.direction-up.active { background: color-mix(in srgb, var(--success) 22%, var(--bg-elev-2)); border-color: var(--success); color: var(--success); }
+.direction-btn.direction-down.active { background: color-mix(in srgb, var(--danger) 22%, var(--bg-elev-2)); border-color: var(--danger); color: var(--danger); }
+
+.price-preview { padding: 10px 14px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent) 10%, var(--bg-elev-2)); border: 1px solid var(--border); font-size: 13.5px; color: var(--text-dim); }
+.price-preview strong { color: var(--accent-2); }
+
+/* Payment panel (shared shape with promote.css's, redefined here to keep amplify.css self-contained) */
+.payment-panel { margin-top: 24px; padding: 18px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-elev); }
+.payment-panel h3 { margin: 0 0 8px; font-size: 16px; }
+.payment-panel .btn + .btn { margin-top: 8px; }
+.upi-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--bg-elev-2); border: 1px solid var(--border); margin-bottom: 14px; font-weight: 700; font-size: 14.5px; }
+#apEntryIdDisplay, #asEntryIdDisplay { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent-2); letter-spacing: 0.02em; word-break: break-all; }
+
+/* How it works (same pattern as promote.css) */
+.how-steps { list-style: none; counter-reset: how-step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.how-steps li { counter-increment: how-step; position: relative; padding-left: 42px; font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
+.how-steps li::before {
+  content: counter(how-step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.how-steps li strong { color: var(--text); }
+
+.how-faq { margin-top: 26px; display: flex; flex-direction: column; gap: 8px; }
+.how-faq details { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); padding: 12px 14px; }
+.how-faq summary { font-size: 13.5px; font-weight: 700; cursor: pointer; list-style: none; }
+.how-faq summary::-webkit-details-marker { display: none; }
+.how-faq summary::before { content: "+ "; color: var(--accent-2); }
+.how-faq details[open] summary::before { content: "− "; }
+.how-faq details p { margin: 10px 0 0; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+.amplify-cta-section { text-align: center; }
+.amplify-cta-card { padding: 28px 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); }
+.amplify-cta-card h2 { margin: 0 0 6px; }
+.amplify-cta-card .btn { max-width: 320px; margin: 0 auto; }

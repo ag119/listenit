@@ -1,4 +1,4 @@
-const CACHE_NAME = "listenit-v30";
+const CACHE_NAME = "listenit-v31";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -13,6 +13,13 @@ const APP_SHELL = [
   "/js/promote-shared.js",
   "/js/promote.js",
   "/js/promote-submit.js",
+  "/amplify.html",
+  "/amplify-submit.html",
+  "/css/amplify.css",
+  "/js/amplify-shared.js",
+  "/js/amplify.js",
+  "/js/amplify-submit.js",
+  "/js/amplify-home.js",
   "/manifest.webmanifest",
   "/offline.html",
   "/icons/icon-192.png",

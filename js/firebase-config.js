@@ -50,5 +50,15 @@ window.ListenIt = {
   async getSocialListings() { return []; },
   async getSocialListingRejections() { return []; },
   async submitSocialListingRequest() { return null; },
-  async deleteSocialListingRequest() { return false; }
+  async deleteSocialListingRequest() { return false; },
+  async getAppPoints() { return {}; },
+  async getFeaturedApps() { return []; },
+  async getAppPointActivity() { return []; },
+  async getAppPointRejections() { return []; },
+  async getFeaturedAppRejections() { return []; },
+  async getAmplifyConfig() { return {}; },
+  async submitAppPointRequest() { return null; },
+  async deleteAppPointRequest() { return false; },
+  async submitFeaturedAppRequest() { return null; },
+  async deleteFeaturedAppRequest() { return false; }
 };

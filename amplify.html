@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Amplify rankings — ListenIt</title>
+<meta name="description" content="ListenIt's app rankings — every app has a Decibel score. Gift dB to boost one up, or pay to dock one down. Five Spotlight slots up top." />
+<meta name="robots" content="noindex" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#7c3aed" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="color-scheme" content="dark light" />
+
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/amplify.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="brand" aria-label="ListenIt home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+          <rect x="6.4" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="10.8" y="2.5" width="2.6" height="19" rx="1.3" fill="currentColor"/>
+          <rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="19.6" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand-name"><span class="brand-name-listen">Listen</span><span class="brand-name-it">It</span></span>
+    </a>
+    <div class="header-actions">
+      <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Toggle dark / light theme" title="Toggle theme">
+        <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" class="hidden"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="amplify-main">
+
+  <section class="amplify-hero">
+    <div class="amplify-hero-inner">
+      <h1>📢 Amplify</h1>
+      <p class="amplify-hero-sub">Every app in the directory carries a <strong>Decibel (dB)</strong> score. Gift dB to turn one up, pay to turn one down — rank follows the score, live.</p>
+      <div class="amplify-hero-actions">
+        <a href="amplify-submit.html" class="btn btn-primary">🔊 Boost an app →</a>
+        <a href="#howAmplifyWorks" class="btn btn-secondary">❓ How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="myAmplifySection" class="amplify-section hidden">
+    <div class="amplify-section-inner">
+      <h2>Your requests</h2>
+      <p class="amplify-section-sub">Remembered on this device — track what you've submitted here.</p>
+      <div id="myAmplifyList" class="my-amplify-list"></div>
+    </div>
+  </section>
+
+  <section class="amplify-section">
+    <div class="amplify-section-inner">
+      <div class="amplify-section-header">
+        <h2>🔦 Spotlight</h2>
+        <a href="amplify-submit.html?mode=spotlight" class="link-btn">Get featured →</a>
+      </div>
+      <div id="spotlightCarousel" class="spotlight-carousel"><p class="amplify-empty">Loading…</p></div>
+    </div>
+  </section>
+
+  <section class="amplify-section">
+    <div class="amplify-section-inner">
+      <div class="amplify-section-header">
+        <h2>Rankings</h2>
+        <p id="rankingsCount" class="amplify-section-sub"></p>
+      </div>
+      <div id="rankingsList" class="rankings-list"><p class="amplify-empty">Loading…</p></div>
+      <div id="rankingsPager" class="rankings-pager hidden">
+        <button id="pagerPrev" class="btn btn-secondary" type="button">← Prev</button>
+        <span id="pagerLabel" class="pager-label"></span>
+        <button id="pagerNext" class="btn btn-secondary" type="button">Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="amplify-section">
+    <div class="amplify-section-inner">
+      <h2>Recent activity</h2>
+      <div id="activityList" class="activity-list"><p class="amplify-empty">No activity yet.</p></div>
+    </div>
+  </section>
+
+  <section id="howAmplifyWorks" class="amplify-section how-it-works">
+    <div class="amplify-section-inner">
+      <h2>How it works</h2>
+      <ol class="how-steps">
+        <li>
+          <strong>Every app starts with a Decibel score.</strong>
+          Seeded once from its existing rating and play count — nobody starts at zero, and after that the score only moves when someone pays to move it.
+        </li>
+        <li>
+          <strong>🔊 Turn it up, or 🔉 turn it down.</strong>
+          Pick any app, pick how many dB, and pay — turning an app up is a gift to it, turning one down docks its score. Prices differ for up vs. down. Scores are floored at 0 either way.
+        </li>
+        <li>
+          <strong>Rank follows the score.</strong>
+          Highest dB at the top of Rankings, live. There's no separate "vote" — the dB total *is* the rank.
+        </li>
+        <li>
+          <strong>🔦 Spotlight is a different, separate thing.</strong>
+          Five paid slots at the very top of the homepage, priced per day by rank (rank 1 costs more than rank 5). A Spotlighted app keeps its own dB rank in the list below at the same time — Spotlight is placement, not points.
+        </li>
+        <li>
+          <strong>Pay, then send your screenshot.</strong>
+          Submitting gives you a request ID — pay that amount to our UPI ID, then send the screenshot on WhatsApp with your request ID so it can be matched and confirmed.
+        </li>
+        <li>
+          <strong>We review by hand.</strong>
+          No payment gateway here — the site owner checks your screenshot against their own UPI history and approves it manually, usually within a day. Track the result any time in "Your requests" above; a rejected request shows the reason and can be edited and resent.
+        </li>
+      </ol>
+
+      <div class="how-faq">
+        <details>
+          <summary>Can I turn down an app I don't like?</summary>
+          <p>Yes — anyone can pay to dock any app's dB, same as boosting. It's reviewed by hand the same way boosting is, and scores can never go below 0.</p>
+        </details>
+        <details>
+          <summary>Does Spotlight affect an app's dB or rank in the list?</summary>
+          <p>No — Spotlight is a separate paid placement at the top of the homepage. A Spotlighted app's Decibel score and its position in Rankings work exactly the same as any other app's.</p>
+        </details>
+        <details>
+          <summary>What happens when a Spotlight slot expires?</summary>
+          <p>It just stops showing in the carousel once its paid days are up — nothing else changes, and the slot opens up for the next request at that rank.</p>
+        </details>
+        <details>
+          <summary>Why was my request rejected, and what happens to my money?</summary>
+          <p>This site never touches your payment directly — you only pay after seeing your request ID, and we only mark a request approved after manually checking your screenshot. If a request is rejected, no charge should have gone through on our end for it; if you already paid before hearing back, message us on WhatsApp with your request ID.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="amplify-section amplify-cta-section">
+    <div class="amplify-section-inner amplify-cta-card">
+      <h2>Ready to amplify an app?</h2>
+      <p class="amplify-section-sub">Turn one up, turn one down, or get it Spotlighted — takes about a minute.</p>
+      <a href="amplify-submit.html" class="btn btn-primary btn-block">Get started →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p><a href="/">← Back to ListenIt</a> · Built with ❤️ for the internet's odd corners.</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/apps-data.js"></script>
+<script src="js/amplify-shared.js"></script>
+<script src="js/amplify.js"></script>
+<script type="module" src="js/firebase-app.mjs"></script>
+</body>
+</html>

@@ -143,6 +143,26 @@ Since the form now lives on its own page, Boost (from the leaderboard or "Your e
 
 **Shareable cards** — a 📤 Share button next to every leaderboard entry, in "Your entries," and right after submitting a bid (before it's even approved — "I just bid ₹250" is still worth sharing, the FOMO doesn't need to wait for review). Rendered entirely client-side with `<canvas>` (`buildShareCanvas()` in `js/promote-shared.js`) — a 1080×1080 gradient card with the rank (or bid, for a pending one), name, platform, and a CTA back to `promote.html`. No backend, no image hosting. Uses the Web Share API with a real file where that's supported (Android Chrome, iOS Safari 16.4+) so it drops straight into WhatsApp/Instagram's native share sheet; falls back to downloading the PNG plus opening a WhatsApp share with the caption text on browsers that can't share files (most desktop ones).
 
+### Amplify (paid app rankings)
+
+A second, separate paid feature — this one about the directory's own 114+ apps rather than external social accounts, and the only one that touches the homepage itself (`index.html`, `css/amplify.css` via a new `<link>`, three new script tags). Two pages plus a homepage teaser:
+
+- **`amplify.html`** — the full rankings list, the Spotlight carousel, recent activity, "Your requests," and a "How it works" + FAQ explainer.
+- **`amplify-submit.html`** — a two-mode form: **Turn up / down** (gift or dock an app's score) and **Get Spotlighted** (pay for one of 5 featured slots), switched by a mode toggle or a `?mode=spotlight` query param.
+- **The homepage teaser** (`#amplifyHomeSection`, right after the hero) — the Spotlight carousel plus a compact top-8 ranked list, both linking out to `amplify.html`/`amplify-submit.html` for anything beyond that. Homepage-added per an explicit ask to change it "a little bit" — categories, Mix, and search are untouched; this is a new section, not a replacement.
+
+**Every app carries a Decibel (dB) score** — the ranking metric, styled as a volume/loudness pun to match the site's audio theme ("🔊 turn it up" to boost, "🔉 turn it down" to dock). Rank is nothing but "sort all apps by dB, highest first" (tie-break: name). Every app got a **one-time starting score** (`scripts/seed-app-points.mjs`, already run against all 114 apps) — 100 base + up to 100 from its existing IMDb-weighted rating + up to 100 from play count (capped at 500 plays) — so nothing starts at zero, and a brand-new app added later gets seeded the same way the next time that script runs (it skips any app that already has a score, so it's safe to re-run and only touches new apps). After the seed, a score only ever moves via an approved request. **Floored at 0** — someone can pay to dock an app toward the bottom, never into negative numbers.
+
+**Five Firestore collections, same shape as the Promote board**: `appPoints` (public read, the live score per app, admin-write-only) and `featuredApps` (public read, up to 5 active Spotlight slots keyed by appId, admin-write-only) are the two public "current state" collections; `appPointRequests` and `featuredAppRequests` are the unreadable pending queues; `appPointRejections` and `featuredAppRejections` are the public rejection-reason logs. One real difference from Promote: `appPointRequests` uses a **client-generated random id**, not a deterministic platform+handle-style key — many different people gifting or docking dB to the *same* app over time is the whole point here, so requests must never collapse into each other the way a resubmitted social listing intentionally does. `featuredAppRequests` stays deterministic (keyed by appId), since renewing your own app's Spotlight request should overwrite the pending one, same reasoning as Promote's top-ups. A separate `appPointActivity` collection (public read, admin-write-only, append-only) powers "recent activity" — each entry also carries the original `requestId`, so "Your requests" can tell "approved and applied" apart from "still pending" without needing to read the unreadable queue.
+
+**Spotlight is placement, not points** — a featured app keeps its own independent dB score and rank in the list the whole time; getting Spotlighted doesn't touch it. A slot is priced **per day, by rank** (rank 1 costs more than rank 5) and expires on its own — the admin tool computes `featuredUntil = now + days` when approving, and the client just filters out anything already past that timestamp when rendering the carousel, so no cron job or backend is needed to "clean up" an expired slot.
+
+**Pricing is admin-configurable, not hardcoded** — `config/featuredPricing` (₹/day per rank 1–5) and `config/pointsPricing` (₹/dB for turning up vs. turning down — priced differently on purpose, since a straight 1:1 would make ganging up to dock an app trivially cheap) are public-read, admin-write-only docs, seeded once with starting values by `scripts/seed-amplify-config.mjs` and from then on edited from the admin tool's "Amplify · Pricing" tab. Both submission forms read these live before showing a price, so changing a number in the admin tool changes what the public site quotes immediately, no redeploy.
+
+**The admin tool** (same `admin-tool/`, gitignored, local-only) gained three tabs alongside the original social-listings one: **Amplify · dB points** (approve computes `Math.max(0, current ± amount)` and logs it to `appPointActivity`; reject prompts for a reason same as Promote), **Amplify · Spotlight** (shows which of the 5 ranks are currently occupied and by whom before you approve, and lets you adjust the final rank/days at approval time rather than blindly trusting what was requested — useful since two people might request the same rank), and **Amplify · Pricing** (the config editor above).
+
+**"Your requests"** (on `amplify.html`) works like Promote's "Your entries" — `localStorage`, not an account, courtesy status only. A dB request shows `✅ Applied — now X dB` (matched via that `requestId` on the activity log), `❌ Rejected` with the reason, or `⏳ Pending review` with a 🗑 Remove button (same client-deletable-by-id rule as Promote's request queue). A Spotlight request shows the same three states, "Live" meaning "currently in `featuredApps` and not yet expired."
+
 ### Ranking (IMDb-style weighted rating)
 
 Plain averages break with small sample sizes — one 5-star rating shouldn't outrank an app with 40 ratings averaging 4.8. Ranking instead uses IMDb's Bayesian weighted-rating formula, in `js/app.js`:
@@ -170,6 +190,7 @@ Yes, with one thing to get right. The config in `js/firebase-config.js` is **not
 - Presence writes are locked to `presence/{your-own-anonymous-uid}`, set to `true` only — you can't write another user's key or arbitrary data.
 - Message clouds (`/clouds` in the Realtime Database) are the one collection here with genuinely open-ended, free-text content rather than fixed values — the rules still enforce length caps, a create-only history (nothing can be edited or deleted once written), and bounded TTL growth per write, but there's no auth or moderation on *what* someone writes, only *how much* and *how long it stays up*. Reasonable for a hobby site's traffic; something to know before pointing a large audience at it.
 - `socialListings` (the promote.html leaderboard) is **read-only from the client**, same reasoning as `apps` — a client buying their way onto the leaderboard is still a client writing arbitrary content otherwise. `socialListingRequests` is unreadable from the client (writable, keyed by a deterministic id so a resubmission overwrites rather than duplicates, and deletable so a submitter can withdraw their own still-pending request — see "Promote" above), so pending bid amounts and contact info can't be scraped before review. `socialListingRejections` is the one exception that's readable but still client-write-`false` — a rejection reason isn't sensitive the way a pending bid is, and the submitter needs to be able to read their own. Every write to any of these three goes through the local `admin-tool/` (Admin SDK, gitignored, never deployed) by hand, only after checking the payment yourself.
+- Amplify's six collections (`appPoints`, `featuredApps`, `appPointRequests`, `featuredAppRequests`, `appPointActivity`, `appPointRejections`, `featuredAppRejections`) and the `config` docs follow the exact same read-only-results / unreadable-queue / admin-tool-only-write shape as Promote's — see "Amplify" above for the one real difference (`appPointRequests` uses a random id instead of a deterministic one, since many people gifting/docking the same app over time is expected, not a duplicate).
 - The one genuine secret in this setup is `serviceAccountKey.json` (used by the `scripts/*.mjs` admin scripts and `admin-tool/`, run locally/by you, never shipped to the site). It's in `.gitignore` — never commit it.
 
 ### Setup steps
@@ -193,7 +214,13 @@ Yes, with one thing to get right. The config in `js/firebase-config.js` is **not
    npm run seed-firebase
    ```
    Re-run this any time you add a new app to `js/apps-data.js`.
-8. Reload the site — analytics/trending/reactions/live-users should now be live. Check the browser console for `[ListenIt]` warnings if something's off.
+8. **Seed Amplify** (dB scores + pricing — safe to skip if you're not using that feature):
+   ```bash
+   node scripts/seed-app-points.mjs
+   node scripts/seed-amplify-config.mjs
+   ```
+   Re-run `seed-app-points.mjs` any time you add new apps — it only seeds ones that don't have a score yet. `seed-amplify-config.mjs` only runs once ever; after that, prices are edited from the admin tool's "Amplify · Pricing" tab.
+9. Reload the site — analytics/trending/reactions/live-users should now be live. Check the browser console for `[ListenIt]` warnings if something's off.
 
 ### Adding an app without redeploying
 
@@ -310,8 +337,20 @@ scripts/seed-firebase.mjs  Pre-creates the Firestore docs the rules require (nee
 scripts/add-app.mjs      Adds one app to Firestore (listing + stats docs) without redeploying
 scripts/sync-apps.mjs    Upserts the entire js/apps-data.js list into Firestore in one shot
 scripts/clean-clouds.mjs  Deletes expired message clouds from Realtime Database (optional, RTDB has no TTL of its own)
+scripts/seed-app-points.mjs     One-time Decibel score seed for Amplify — see "Amplify" above
+scripts/seed-amplify-config.mjs  One-time Spotlight/dB pricing seed — see "Amplify" above
 promote.html             Paid social-listing leaderboard (bid-ranked) — see "Promote" above
-css/promote.css          Styles specific to promote.html
-js/promote.js            Leaderboard rendering, rank calculator, submission form
-admin-tool/              Local-only approval tool for promote.html submissions — gitignored, never pushed
+promote-submit.html      The submission form for promote.html, on its own page
+css/promote.css          Styles specific to promote.html + promote-submit.html
+js/promote-shared.js     Constants/helpers shared by promote.html and promote-submit.html
+js/promote.js            Leaderboard, activity, "Your entries" rendering
+js/promote-submit.js     The submission form's logic (auto-URL, validation, payment panel)
+amplify.html             Full app rankings, Spotlight carousel, activity — see "Amplify" above
+amplify-submit.html      The dB/Spotlight submission form, on its own page
+css/amplify.css          Styles for amplify.html/amplify-submit.html + the homepage teaser
+js/amplify-shared.js     Constants/helpers shared across all three Amplify surfaces
+js/amplify.js            Rankings page rendering
+js/amplify-submit.js     The submission form's logic
+js/amplify-home.js       The homepage's compact Spotlight + top-8 teaser section
+admin-tool/              Local-only approval tool for promote.html + Amplify submissions — gitignored, never pushed
 ```

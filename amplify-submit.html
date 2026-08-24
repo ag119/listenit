@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Amplify an app — ListenIt</title>
+<meta name="description" content="Boost or dock an app's Decibel score, or pay to get it Spotlighted on the ListenIt homepage." />
+<meta name="robots" content="noindex" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#7c3aed" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="color-scheme" content="dark light" />
+
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/amplify.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="brand" aria-label="ListenIt home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+          <rect x="6.4" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="10.8" y="2.5" width="2.6" height="19" rx="1.3" fill="currentColor"/>
+          <rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/>
+          <rect x="19.6" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand-name"><span class="brand-name-listen">Listen</span><span class="brand-name-it">It</span></span>
+    </a>
+    <div class="header-actions">
+      <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Toggle dark / light theme" title="Toggle theme">
+        <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" class="hidden"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="amplify-main">
+
+  <a href="amplify.html" class="back-link">← Back to rankings</a>
+
+  <section class="amplify-hero amplify-hero-compact">
+    <div class="amplify-hero-inner">
+      <h1>Amplify an app</h1>
+      <p class="amplify-hero-sub">Pick what you want to do, choose an app, and pay after you submit.</p>
+    </div>
+  </section>
+
+  <div class="mode-toggle" role="group" aria-label="Choose what you want to do">
+    <button type="button" id="modePointsBtn" class="mode-toggle-btn active">🔊 Turn up / down</button>
+    <button type="button" id="modeSpotlightBtn" class="mode-toggle-btn">🔦 Get Spotlighted</button>
+  </div>
+
+  <!-- ---------------- Points mode ---------------- -->
+  <section id="pointsSection" class="amplify-section amplify-form-section">
+    <div class="amplify-section-inner">
+      <form id="pointsForm" class="amplify-form">
+        <label>
+          Which app?
+          <select id="apAppSelect" required></select>
+        </label>
+
+        <div class="direction-toggle" role="group" aria-label="Turn it up or down">
+          <button type="button" id="dirUpBtn" class="direction-btn direction-up active">🔊 Turn it up</button>
+          <button type="button" id="dirDownBtn" class="direction-btn direction-down">🔉 Turn it down</button>
+        </div>
+
+        <label>
+          How many dB?
+          <input id="apAmount" type="number" min="1" step="1" value="10" />
+        </label>
+
+        <div id="apPricePreview" class="price-preview"></div>
+
+        <label>
+          Note (optional)
+          <input id="apNote" type="text" maxlength="140" placeholder="Anything you want us to know" />
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-block">Submit request</button>
+      </form>
+
+      <div id="apPaymentPanel" class="payment-panel hidden">
+        <h3>✅ Request submitted</h3>
+        <p class="amplify-section-sub">Your request ID is:</p>
+        <div class="upi-box">
+          <span id="apEntryIdDisplay"></span>
+          <button id="apCopyEntryIdBtn" class="btn btn-secondary" type="button">Copy</button>
+        </div>
+        <p class="amplify-section-sub">Pay <strong id="apPaymentAmount"></strong> to the UPI ID below, then send a payment screenshot on WhatsApp <strong>with your request ID</strong>.</p>
+        <div class="upi-box">
+          <span>8853487447@ybl</span>
+          <button id="apCopyUpiBtn" class="btn btn-secondary" type="button">Copy</button>
+        </div>
+        <a id="apPaymentWhatsAppBtn" class="btn btn-primary btn-block" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
+          Send payment screenshot on WhatsApp
+        </a>
+        <p class="form-note">Once confirmed, the dB change lands — usually within a day.</p>
+        <a href="amplify.html" class="btn btn-ghost btn-block">View rankings →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- Spotlight mode ---------------- -->
+  <section id="spotlightSection" class="amplify-section amplify-form-section hidden">
+    <div class="amplify-section-inner">
+      <form id="spotlightForm" class="amplify-form">
+        <label>
+          Which app?
+          <select id="asAppSelect" required></select>
+        </label>
+
+        <label>
+          Target rank
+          <select id="asRank" required>
+            <option value="1">#1</option>
+            <option value="2">#2</option>
+            <option value="3">#3</option>
+            <option value="4">#4</option>
+            <option value="5">#5</option>
+          </select>
+        </label>
+        <p id="asRankHint" class="field-hint"></p>
+
+        <label>
+          How many days?
+          <input id="asDays" type="number" min="1" step="1" value="7" />
+        </label>
+
+        <div id="asPricePreview" class="price-preview"></div>
+
+        <label>
+          Note (optional)
+          <input id="asNote" type="text" maxlength="140" placeholder="Anything you want us to know" />
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-block">Submit request</button>
+      </form>
+
+      <div id="asPaymentPanel" class="payment-panel hidden">
+        <h3>✅ Request submitted</h3>
+        <p class="amplify-section-sub">Your request ID is:</p>
+        <div class="upi-box">
+          <span id="asEntryIdDisplay"></span>
+          <button id="asCopyEntryIdBtn" class="btn btn-secondary" type="button">Copy</button>
+        </div>
+        <p class="amplify-section-sub">Pay <strong id="asPaymentAmount"></strong> to the UPI ID below, then send a payment screenshot on WhatsApp <strong>with your request ID</strong>.</p>
+        <div class="upi-box">
+          <span>8853487447@ybl</span>
+          <button id="asCopyUpiBtn" class="btn btn-secondary" type="button">Copy</button>
+        </div>
+        <a id="asPaymentWhatsAppBtn" class="btn btn-primary btn-block" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
+          Send payment screenshot on WhatsApp
+        </a>
+        <p class="form-note">Once confirmed, your Spotlight slot goes live — usually within a day.</p>
+        <a href="amplify.html" class="btn btn-ghost btn-block">View rankings →</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p><a href="amplify.html">← Back to rankings</a> · <a href="/">ListenIt home</a></p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/apps-data.js"></script>
+<script src="js/amplify-shared.js"></script>
+<script src="js/amplify-submit.js"></script>
+<script type="module" src="js/firebase-app.mjs"></script>
+</body>
+</html>

@@ -176,6 +176,117 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------------- Amplify: paid app rankings (see index.html + amplify.html) ----------------
+    // Same shape as the promote.html board above: a public read-only result
+    // collection, an unreadable request queue the admin tool (Admin SDK)
+    // reviews by hand after a manual UPI payment, and a public rejection
+    // notice collection so a submitter's own browser can see why without
+    // reading the queue itself.
+
+    // Every listed app's current Decibel (dB) score — seeded once from its
+    // existing rating/plays (scripts/seed-app-points.mjs), then only ever
+    // moved by an approved appPointRequests entry. Read-only from the
+    // client for the same reason `apps` and `socialListings` are: letting
+    // clients write their own score would make the whole ranking
+    // meaningless.
+    match /appPoints/{appId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // A single pending "gift" or "docking" of dB to one app. Deliberately
+    // NOT keyed by appId like socialListingRequests — many different
+    // people boosting (or docking) the same app over time is the whole
+    // point, so every submission gets its own id (client-generated, so the
+    // submitter can remember it locally the same way "Your entries" does
+    // for promote.html). Unreadable so pending amounts can't be scraped or
+    // gamed before review; deletable by anyone who knows the id so a
+    // submitter can withdraw their own still-pending request (same trust
+    // model as socialListingRequests' delete rule).
+    match /appPointRequests/{requestId} {
+      allow read: if false;
+      allow delete: if true;
+      allow create: if request.resource.data.appId is string
+                    && request.resource.data.appId.size() > 0
+                    && request.resource.data.appName is string
+                    && request.resource.data.appName.size() > 0
+                    && request.resource.data.appName.size() <= 80
+                    && request.resource.data.direction in ['up', 'down']
+                    && request.resource.data.amount is int
+                    && request.resource.data.amount >= 1
+                    && request.resource.data.amount <= 5000
+                    && request.resource.data.priceRupees is int
+                    && request.resource.data.priceRupees >= 1
+                    && request.resource.data.priceRupees <= 1000000
+                    && request.resource.data.contactNote is string
+                    && request.resource.data.contactNote.size() <= 140
+                    && request.resource.data.submittedAt == request.time;
+    }
+
+    // Append-only public log of approved dB changes — written by the admin
+    // tool at the same time it updates appPoints, purely for the "recent
+    // activity" feed. Never edited or deleted once written.
+    match /appPointActivity/{activityId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Rejection notice for one appPointRequests id, same reasoning as
+    // socialListingRejections above.
+    match /appPointRejections/{requestId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // The public Spotlight carousel — up to 5 currently-featured apps.
+    // Read-only; every write comes from the admin tool after a payment is
+    // verified. Keyed by appId (one active Spotlight slot per app at a
+    // time); the client filters expired ones by comparing featuredUntil to
+    // now, so nothing server-side needs to run a cleanup job.
+    match /featuredApps/{appId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // A pending Spotlight request, keyed by appId like socialListingRequests
+    // — resubmitting for the same app (e.g. renewing) overwrites the
+    // pending request instead of piling up duplicates.
+    match /featuredAppRequests/{appId} {
+      allow read: if false;
+      allow delete: if true;
+      allow create, update: if request.resource.data.appId is string
+                    && request.resource.data.appId.size() > 0
+                    && request.resource.data.appName is string
+                    && request.resource.data.appName.size() > 0
+                    && request.resource.data.appName.size() <= 80
+                    && request.resource.data.requestedRank is int
+                    && request.resource.data.requestedRank >= 1
+                    && request.resource.data.requestedRank <= 5
+                    && request.resource.data.days is int
+                    && request.resource.data.days >= 1
+                    && request.resource.data.days <= 365
+                    && request.resource.data.priceRupees is int
+                    && request.resource.data.priceRupees >= 1
+                    && request.resource.data.priceRupees <= 1000000
+                    && request.resource.data.contactNote is string
+                    && request.resource.data.contactNote.size() <= 140
+                    && request.resource.data.submittedAt == request.time;
+    }
+
+    match /featuredAppRejections/{appId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Admin-editable pricing shown on amplify-submit.html before someone
+    // pays — per-rank Spotlight day-rate and per-dB up/down rate. Public
+    // read so the form can show real prices; write only via the admin tool,
+    // so the site owner can retune prices without touching code.
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;
