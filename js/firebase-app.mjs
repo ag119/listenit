@@ -27,7 +27,7 @@ function announce(ok) {
 
 async function init() {
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`);
-  const { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } =
+  const { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc, updateDoc, increment, serverTimestamp } =
     await import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`);
 
   const app = initializeApp(cfg);
@@ -230,6 +230,18 @@ async function init() {
       return out;
     } catch (e) {
       return [];
+    }
+  };
+  // Lets a submitter withdraw their own still-pending request (see
+  // firestore.rules — deletion is allowed for anyone who knows the id,
+  // same trust model as create/update above). Only ever removes a
+  // *pending* request; a live listing in `socialListings` is untouched.
+  window.ListenIt.deleteSocialListingRequest = async (key) => {
+    try {
+      await deleteDoc(doc(db, "socialListingRequests", key));
+      return true;
+    } catch (e) {
+      return false;
     }
   };
   window.ListenIt.submitSocialListingRequest = async (key, data) => {

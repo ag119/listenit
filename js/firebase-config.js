@@ -49,5 +49,6 @@ window.ListenIt = {
   async voteFeedback() { return false; },
   async getSocialListings() { return []; },
   async getSocialListingRejections() { return []; },
-  async submitSocialListingRequest() { return null; }
+  async submitSocialListingRequest() { return null; },
+  async deleteSocialListingRequest() { return false; }
 };

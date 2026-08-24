@@ -1,12 +1,16 @@
 /* ===== Promote page ===== */
 .promote-main { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
 
+.back-link { display: inline-block; margin-top: 20px; font-size: 13.5px; color: var(--text-dim); text-decoration: none; }
+.back-link:hover { color: var(--accent); }
+
 .promote-hero {
   text-align: center;
   padding: 48px 0 32px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 36px;
 }
+.promote-hero-compact { padding: 28px 0 24px; }
 .promote-hero h1 { font-size: clamp(26px, 5vw, 36px); margin: 0 0 12px; }
 .promote-hero-sub { color: var(--text-dim); font-size: 15px; line-height: 1.6; max-width: 520px; margin: 0 auto 20px; }
 
@@ -15,6 +19,62 @@
 .promote-section h2 { font-size: 20px; margin: 0 0 4px; }
 .promote-section-sub { color: var(--text-dim); font-size: 13.5px; line-height: 1.5; margin: 0 0 16px; }
 .promote-empty { color: var(--text-faint); font-size: 13.5px; text-align: center; padding: 24px 0; }
+
+/* How it works */
+.how-steps { list-style: none; counter-reset: how-step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.how-steps li {
+  counter-increment: how-step;
+  position: relative;
+  padding-left: 42px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.how-steps li::before {
+  content: counter(how-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.how-steps li strong { color: var(--text); }
+
+.how-faq { margin-top: 26px; display: flex; flex-direction: column; gap: 8px; }
+.how-faq details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  padding: 12px 14px;
+}
+.how-faq summary {
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.how-faq summary::-webkit-details-marker { display: none; }
+.how-faq summary::before { content: "+ "; color: var(--accent-2); }
+.how-faq details[open] summary::before { content: "− "; }
+.how-faq details p { margin: 10px 0 0; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+.promote-cta-section { text-align: center; }
+.promote-cta-card {
+  padding: 28px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.promote-cta-card h2 { margin: 0 0 6px; }
+.promote-cta-card .btn { max-width: 320px; margin: 0 auto; }
 
 /* Leaderboard */
 .leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
@@ -85,6 +145,8 @@
 .my-entry-status.status-rejected { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
 .my-entry-reason { flex-basis: 100%; font-size: 12.5px; color: var(--text-dim); font-style: italic; }
 .my-entry-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-danger-outline { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.btn-danger-outline:hover { border-color: var(--danger); }
 
 /* Activity feed */
 .activity-list { display: flex; flex-direction: column; gap: 8px; }
@@ -116,6 +178,22 @@
   outline: none;
 }
 .listing-form input:focus, .listing-form select:focus { border-color: var(--accent); }
+
+.handle-input-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev-2);
+}
+.handle-input-row:focus-within { border-color: var(--accent); }
+.handle-at { padding: 0 0 0 13px; color: var(--text-faint); font-weight: 700; }
+.handle-input-row input { border: none; background: transparent; flex: 1; padding-left: 4px; }
+.handle-input-row input:focus { border: none; }
+
+.listing-form input[readonly] { color: var(--text-dim); cursor: default; }
+.field-hint { font-weight: 500; font-size: 12px; color: var(--text-faint); margin: 0; }
+#lfUrlEditToggle { align-self: flex-start; }
 
 .topup-notice {
   padding: 10px 14px;
@@ -170,3 +248,4 @@
   font-size: 14.5px;
 }
 #entryIdDisplay { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent-2); letter-spacing: 0.02em; word-break: break-all; }
+.payment-panel .btn + .btn { margin-top: 8px; }

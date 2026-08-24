@@ -129,8 +129,20 @@ service cloud.firestore {
     // ever reads this collection. Approving or rejecting a request
     // deletes it from here (approving also writes the result into
     // `socialListings`), so "still present" always means "still pending."
+    // The submitter can also delete their own pending request directly
+    // (see `allow delete` below) — a self-service "never mind" before the
+    // admin gets to it.
     match /socialListingRequests/{requestId} {
-      allow read, delete: if false;
+      allow read: if false;
+      // A pending request can be withdrawn by anyone who knows its id —
+      // same trust model as create/update below: the id is derived from
+      // platform+handle (not secret), and there's no auth here to check an
+      // "owner" against. This only ever lets someone delete a *pending*
+      // request of their own choosing; it can't touch a live listing
+      // (socialListings stays fully client-write: false) or anyone else's
+      // approval history. The admin's manual review remains the real
+      // backstop either way.
+      allow delete: if true;
       allow create, update: if request.resource.data.displayName is string
                     && request.resource.data.displayName.size() > 0
                     && request.resource.data.displayName.size() <= 40

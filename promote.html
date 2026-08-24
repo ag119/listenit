@@ -50,14 +50,65 @@
     <div class="promote-hero-inner">
       <h1>🏆 Promote your page</h1>
       <p class="promote-hero-sub">List your social media account here, ranked by bid amount. Higher bid, higher rank — ties go to whoever got there first. Starting bid is <strong>₹100</strong>.</p>
-      <a href="#promoteForm" class="btn btn-primary">List your account</a>
+      <a href="promote-submit.html" class="btn btn-primary">List your account →</a>
+    </div>
+  </section>
+
+  <section class="promote-section how-it-works">
+    <div class="promote-section-inner">
+      <h2>How it works</h2>
+      <ol class="how-steps">
+        <li>
+          <strong>Fill in your details.</strong>
+          Your name, platform, and handle — pick Instagram, YouTube, X, or Facebook and we build your profile link for you automatically, so there's nothing to copy-paste or get wrong.
+        </li>
+        <li>
+          <strong>Pick your rank.</strong>
+          Enter a bid amount and see the rank it lands you right now, or the other way round — type the rank you want and we'll show the bid needed to take it. Minimum bid is ₹100. Ties go to whoever bid first.
+        </li>
+        <li>
+          <strong>Submit and pay.</strong>
+          Submitting gives you an entry ID — pay that amount to our UPI ID, then send the payment screenshot on WhatsApp along with your entry ID so it can be matched to your request.
+        </li>
+        <li>
+          <strong>We review by hand.</strong>
+          No payment gateway here — the site owner checks your screenshot against their own UPI history and approves it manually, usually within a day. Track the result any time in "Your entries" below.
+        </li>
+        <li>
+          <strong>Live, rejected, or still pending.</strong>
+          Approved entries go straight to the leaderboard. If something's off, you'll see the reason under "Your entries" and can fix it with one click via <strong>Edit &amp; resubmit</strong> — no need to start over. Changed your mind before review? <strong>Remove</strong> your request any time it's still pending.
+        </li>
+        <li>
+          <strong>Boost or share, any time.</strong>
+          Already listed? Bid higher later to climb the board with <strong>⬆ Boost</strong>. Either way, <strong>📤 Share</strong> turns your rank (or your bid, before it's even approved) into a shareable card for Instagram/WhatsApp.
+        </li>
+      </ol>
+
+      <div class="how-faq">
+        <details>
+          <summary>Is my spot permanent?</summary>
+          <p>Yes — once approved, your listing stays up. Someone can only outrank you by bidding higher; it never expires on its own.</p>
+        </details>
+        <details>
+          <summary>Why was I rejected, and what happens to my money?</summary>
+          <p>This site never touches your payment directly — you only pay after seeing your entry ID, and only we mark it approved after manually checking your screenshot. If we reject a request, no charge should have gone through on our end for it; if you already paid before hearing back, message us on WhatsApp with your entry ID.</p>
+        </details>
+        <details>
+          <summary>Can I change my handle or platform after submitting?</summary>
+          <p>Not on the same entry — a listing is keyed to one platform + handle. Remove the pending request and submit a fresh one instead, or if it's already live, reach out on WhatsApp.</p>
+        </details>
+        <details>
+          <summary>Is "Your entries" tied to my account?</summary>
+          <p>There's no account system on this site. "Your entries" is just a note this browser keeps for itself about what it submitted — clearing your browser data or switching devices means it won't remember, though your listing itself is unaffected either way.</p>
+        </details>
+      </div>
     </div>
   </section>
 
   <section id="myEntriesSection" class="promote-section hidden">
     <div class="promote-section-inner">
       <h2>Your entries</h2>
-      <p class="promote-section-sub">Remembered on this device — submitting the same account again updates it instead of creating a duplicate. Want to list a different platform? Just fill in the form below for that one too.</p>
+      <p class="promote-section-sub">Remembered on this device — submitting the same account again updates it instead of creating a duplicate. Want to list a different platform? Just <a href="promote-submit.html">submit that one too</a>.</p>
       <div id="myEntriesList" class="my-entries-list"></div>
     </div>
   </section>
@@ -84,88 +135,11 @@
     </div>
   </section>
 
-  <section id="promoteForm" class="promote-section promote-form-section">
-    <div class="promote-section-inner">
-      <h2>List your account</h2>
-      <p class="promote-section-sub">Fill this in, pick your bid, then pay on UPI — your listing goes live once the payment's confirmed (usually within a day).</p>
-
-      <form id="listingForm" class="listing-form">
-        <div class="listing-form-grid">
-          <label>
-            Your name / brand
-            <input id="lfName" type="text" maxlength="40" placeholder="e.g. Rohan Sharma" required />
-          </label>
-          <label>
-            Platform
-            <select id="lfPlatform" required>
-              <option value="Instagram">Instagram</option>
-              <option value="YouTube">YouTube</option>
-              <option value="X / Twitter">X / Twitter</option>
-              <option value="Facebook">Facebook</option>
-              <option value="Other">Other</option>
-            </select>
-          </label>
-          <label>
-            Handle
-            <input id="lfHandle" type="text" maxlength="40" placeholder="@yourhandle" required />
-          </label>
-          <label>
-            Profile URL
-            <input id="lfUrl" type="url" maxlength="200" placeholder="https://instagram.com/yourhandle" required />
-          </label>
-        </div>
-        <label>
-          Short tagline (optional)
-          <input id="lfTagline" type="text" maxlength="140" placeholder="One line about your page" />
-        </label>
-
-        <div id="topUpNotice" class="topup-notice hidden"></div>
-
-        <div class="bid-block">
-          <div class="bid-mode-toggle" role="group" aria-label="Choose bid mode">
-            <button type="button" id="bidModeAmount" class="bid-mode-btn active">I'll enter an amount</button>
-            <button type="button" id="bidModeRank" class="bid-mode-btn">I want a specific rank</button>
-          </div>
-
-          <div id="bidByAmount" class="bid-input-row">
-            <label>
-              Your bid (₹)
-              <input id="lfBidAmount" type="number" min="100" step="1" value="100" />
-            </label>
-            <p id="bidAmountPreview" class="bid-preview"></p>
-          </div>
-
-          <div id="bidByRank" class="bid-input-row hidden">
-            <label>
-              Target rank
-              <input id="lfTargetRank" type="number" min="1" step="1" value="1" />
-            </label>
-            <p id="bidRankPreview" class="bid-preview"></p>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block">Submit entry</button>
-      </form>
-
-      <div id="paymentPanel" class="payment-panel hidden">
-        <h3>✅ Entry submitted</h3>
-        <p class="promote-section-sub">Your entry ID is:</p>
-        <div class="upi-box">
-          <span id="entryIdDisplay"></span>
-          <button id="copyEntryIdBtn" class="btn btn-secondary" type="button">Copy</button>
-        </div>
-        <p class="promote-section-sub">Pay <strong id="paymentAmount"></strong> to the UPI ID below, then send a payment screenshot on WhatsApp <strong>with your entry ID</strong> — that's how it gets matched and confirmed.</p>
-        <div class="upi-box">
-          <span id="upiId">8853487447@ybl</span>
-          <button id="copyUpiBtn" class="btn btn-secondary" type="button">Copy</button>
-        </div>
-        <a id="paymentWhatsAppBtn" class="btn btn-primary btn-block" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0012 0C5.4 0 .1 5.3.1 11.9c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6a11.9 11.9 0 005.7 1.4h.1c6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4zM12 21.4h-.1a9.9 9.9 0 01-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.9 9.9 0 01-1.5-5.2C2.1 6.4 6.5 2 12 2c2.6 0 5.1 1 7 2.9a9.8 9.8 0 012.9 7c0 5.5-4.5 9.9-9.9 9.9z"/></svg>
-          Send payment screenshot on WhatsApp
-        </a>
-        <p class="form-note">Once the payment's confirmed, your entry goes live on the leaderboard — usually within a day.</p>
-        <button id="shareSubmissionBtn" class="btn btn-secondary btn-block" type="button">📤 Share that you're bidding</button>
-      </div>
+  <section class="promote-section promote-cta-section">
+    <div class="promote-section-inner promote-cta-card">
+      <h2>Ready to list your account?</h2>
+      <p class="promote-section-sub">Takes about a minute — pick a platform, type your handle, and we'll take it from there.</p>
+      <a href="promote-submit.html" class="btn btn-primary btn-block">List your account →</a>
     </div>
   </section>
 
@@ -178,6 +152,7 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="js/firebase-config.js"></script>
+<script src="js/promote-shared.js"></script>
 <script src="js/promote.js"></script>
 <script type="module" src="js/firebase-app.mjs"></script>
 </body>
