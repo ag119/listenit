@@ -137,16 +137,6 @@ const APPS = [
     addedAt: "2026-08-23"
   },
   {
-    id: "90s-nostalgia-tv",
-    name: "90s Nostalgia TV",
-    url: "https://90stv.vercel.app",
-    domain: "90stv.vercel.app",
-    tagline: "90s cartoon theme songs — the ones that still live rent-free in your head.",
-    category: "Ambient Radio",
-    embeddable: true,
-    addedAt: "2026-08-23"
-  },
-  {
     id: "scenote",
     name: "Scenote",
     url: "https://scenote.pages.dev",
@@ -269,17 +259,6 @@ const APPS = [
     tagline: "Old Tamil melodies for a quiet Chennai evening.",
     category: "Shops & Street Corners",
     thumbnail: "thumbnails/thenisai-saloon.jpg",
-    embeddable: true,
-    addedAt: "2026-08-14"
-  },
-  {
-    id: "yaaron-ki-mehfil",
-    name: "Yaaron Ki Mehfil",
-    url: "https://yaaron-ki-mehfil.vercel.app",
-    domain: "yaaron-ki-mehfil.vercel.app",
-    tagline: "A nostalgic evening for friends — dosti anthems, chai charcha, unforgettable memories.",
-    category: "Shops & Street Corners",
-    thumbnail: "thumbnails/yaaron-ki-mehfil.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
   },
@@ -521,16 +500,6 @@ const APPS = [
     addedAt: "2026-08-21"
   },
   {
-    id: "truck-wala",
-    name: "Truck Wala",
-    url: "https://hornokplease.xyz",
-    domain: "hornokplease.xyz",
-    tagline: "Horn OK Please — the highway shayari and songs painted on the back of an Indian truck.",
-    category: "Transit & Travel",
-    embeddable: false,
-    addedAt: "2026-08-21"
-  },
-  {
     id: "kaundishamein",
     name: "Do Musafir",
     url: "https://www.kaundishamei.me",
@@ -702,16 +671,6 @@ const APPS = [
     addedAt: "2026-08-23"
   },
   {
-    id: "midnight-express",
-    name: "Midnight Express",
-    url: "https://train.hereco.xyz",
-    domain: "train.hereco.xyz",
-    tagline: "An Indian train journey at night — rhythm of the tracks included.",
-    category: "Transit & Travel",
-    embeddable: false,
-    addedAt: "2026-08-23"
-  },
-  {
     id: "conductor-fm",
     name: "Conductor FM",
     url: "https://conductor-fm.nikhilkumar007.com",
@@ -775,17 +734,6 @@ const APPS = [
     tagline: "Stylish Bengali bangers over an illustrated Kolkata skyline.",
     category: "Regional & Folk",
     thumbnail: "thumbnails/bangla-bangers.jpg",
-    embeddable: true,
-    addedAt: "2026-08-14"
-  },
-  {
-    id: "ekant-raag",
-    name: "Ekant Raag",
-    url: "https://ekant-raag-radio.onrender.com",
-    domain: "ekant-raag-radio.onrender.com",
-    tagline: "Solitude and raga — a quiet corner of classical Hindustani music.",
-    category: "Regional & Folk",
-    thumbnail: "thumbnails/ekant-raag.jpg",
     embeddable: true,
     addedAt: "2026-08-14"
   },
@@ -892,17 +840,6 @@ const APPS = [
   },
 
   /* ---------------- Beyond India ---------------- */
-  {
-    id: "places-have-sound",
-    name: "SOMEWHERE",
-    url: "https://places-have-sound.vercel.app",
-    domain: "places-have-sound.vercel.app",
-    tagline: "A tactile archive of music attached to places, moments, and memories.",
-    category: "Beyond India",
-    thumbnail: "thumbnails/places-have-sound.jpg",
-    embeddable: true,
-    addedAt: "2026-08-14"
-  },
   {
     id: "kassita",
     name: "Kassita",
